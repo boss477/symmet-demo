@@ -759,21 +759,20 @@ img { display: block; max-width: 100%; }
 .assurance-strip::before {
   content: '';
   position: absolute;
-  top: -90%;
-  left: -35%;
-  width: 80%;
-  height: 280%;
-  background: #405B72;
-  opacity: .6;
-  border-radius: 50%;
-  filter: blur(90px);
-  animation: assuranceDrift 14s ease-in-out infinite alternate;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 200%;
+  background-image: radial-gradient(ellipse 42% 150% at 50% 50%, rgba(64,91,114,.85), rgba(64,91,114,0) 62%);
+  background-repeat: repeat-x;
+  background-size: 25% 100%;
+  animation: assuranceDrift 20s linear infinite;
   pointer-events: none;
   z-index: 0;
 }
 @keyframes assuranceDrift {
   from { transform: translateX(0); }
-  to   { transform: translateX(150%); }
+  to   { transform: translateX(-25%); }
 }
 .assurance-grid {
   position: relative;
