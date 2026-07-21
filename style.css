@@ -763,16 +763,16 @@ img { display: block; max-width: 100%; }
   left: 0;
   height: 100%;
   width: 200%;
-  background-image: radial-gradient(ellipse 42% 150% at 50% 50%, rgba(64,91,114,.85), rgba(64,91,114,0) 62%);
+  background-image: radial-gradient(ellipse 26% 130% at 50% 50%, rgba(96,131,160,.95), rgba(96,131,160,0) 55%);
   background-repeat: repeat-x;
-  background-size: 25% 100%;
-  animation: assuranceDrift 20s linear infinite;
+  background-size: 20% 100%;
+  animation: assuranceDrift 11s linear infinite;
   pointer-events: none;
   z-index: 0;
 }
 @keyframes assuranceDrift {
   from { transform: translateX(0); }
-  to   { transform: translateX(-25%); }
+  to   { transform: translateX(-20%); }
 }
 .assurance-grid {
   position: relative;
