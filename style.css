@@ -750,10 +750,33 @@ img { display: block; max-width: 100%; }
 
 /* ---- ASSURANCE STRIP ---- */
 .assurance-strip {
+  position: relative;
+  overflow: hidden;
   border-top: 1px solid rgba(27,37,56,.1);
   border-bottom: 1px solid rgba(27,37,56,.1);
 }
+.assurance-strip::before {
+  content: '';
+  position: absolute;
+  top: -60%;
+  left: -25%;
+  width: 150%;
+  height: 220%;
+  background: #1B2538;
+  opacity: .05;
+  border-radius: 50%;
+  filter: blur(70px);
+  animation: assuranceDrift 22s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 0;
+}
+@keyframes assuranceDrift {
+  from { transform: translateX(-8%); }
+  to   { transform: translateX(8%); }
+}
 .assurance-grid {
+  position: relative;
+  z-index: 1;
   max-width: 1280px;
   margin: 0 auto;
   padding: clamp(28px,4vh,44px) clamp(20px,6vw,80px);
