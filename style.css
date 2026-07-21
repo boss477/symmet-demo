@@ -752,27 +752,28 @@ img { display: block; max-width: 100%; }
 .assurance-strip {
   position: relative;
   overflow: hidden;
-  border-top: 1px solid rgba(27,37,56,.1);
-  border-bottom: 1px solid rgba(27,37,56,.1);
+  background: #1B2538;
+  border-top: 1px solid rgba(252,251,241,.08);
+  border-bottom: 1px solid rgba(252,251,241,.08);
 }
 .assurance-strip::before {
   content: '';
   position: absolute;
-  top: -60%;
-  left: -25%;
-  width: 150%;
-  height: 220%;
-  background: #1B2538;
-  opacity: .05;
+  top: -90%;
+  left: -35%;
+  width: 80%;
+  height: 280%;
+  background: #405B72;
+  opacity: .6;
   border-radius: 50%;
-  filter: blur(70px);
-  animation: assuranceDrift 22s ease-in-out infinite alternate;
+  filter: blur(90px);
+  animation: assuranceDrift 14s ease-in-out infinite alternate;
   pointer-events: none;
   z-index: 0;
 }
 @keyframes assuranceDrift {
-  from { transform: translateX(-8%); }
-  to   { transform: translateX(8%); }
+  from { transform: translateX(0); }
+  to   { transform: translateX(150%); }
 }
 .assurance-grid {
   position: relative;
@@ -785,8 +786,8 @@ img { display: block; max-width: 100%; }
   gap: 20px;
 }
 .assurance-item { display: flex; flex-direction: column; gap: 8px; padding: 0 clamp(6px,1.5vw,24px); }
-.assurance-title { font-family: 'Neue Machina','Space Grotesk',sans-serif; font-weight: 600; font-size: 15px; color: #1B2538; }
-.assurance-body { margin: 0; font-size: 14px; line-height: 1.55; color: rgba(27,37,56,.6); }
+.assurance-title { position: relative; z-index: 1; font-family: 'Neue Machina','Space Grotesk',sans-serif; font-weight: 600; font-size: 15px; color: #FCFBF1; }
+.assurance-body { position: relative; z-index: 1; margin: 0; font-size: 14px; line-height: 1.55; color: rgba(252,251,241,.65); }
 
 /* ---- TESTIMONIAL ---- */
 .testimonial-section {
