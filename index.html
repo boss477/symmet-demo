@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Symmet — Spatial Harmony, Considered Design</title>
+  <meta name="description" content="Symmet is a furniture studio built on a single idea — that a room feels calm when every object is in balance with the space around it.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Forum&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ========================= SPLASH ========================= -->
+<div id="splash" class="splash">
+  <video id="splash-video" src="assets/intro.mp4" autoplay muted playsinline preload="auto"></video>
+  <div class="splash-fallback" id="splash-fallback">
+    <img src="assets/mark_slate.png" alt="Symmet" class="splash-mark">
+    <div class="splash-wordmark">symmet</div>
+  </div>
+  <button class="skip-btn" id="skip-btn">Skip intro &rarr;</button>
+</div>
+
+<!-- ========================= NAVIGATION ========================= -->
+<nav class="nav" id="main-nav">
+  <div class="nav-pill">
+    <a href="#" class="nav-brand" data-page="home">
+      <img src="assets/mark_slate.png" alt="" class="nav-mark">
+      <span class="nav-name">symmet</span>
+    </a>
+    <div class="nav-links">
+      <a href="#" class="nav-link" data-page="shop">Shop</a>
+      <a href="#" class="nav-link" data-page="studio">Studio</a>
+      <a href="#" class="nav-link" data-page="about">About</a>
+      <a href="#" class="nav-link" id="nav-contact-link">Contact</a>
+    </div>
+    <div class="nav-actions">
+      <button class="nav-icon-btn" id="cart-btn" aria-label="Cart">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 6h15l-1.6 9H8L6 3H3"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/></svg>
+        <span class="cart-badge" id="cart-badge" style="display:none">0</span>
+      </button>
+      <button class="nav-icon-btn" id="profile-btn" aria-label="Profile">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- Cart Drawer -->
+<div class="scrim" id="scrim"></div>
+<div class="drawer" id="cart-drawer">
+  <div class="drawer-header">
+    <span class="drawer-title">Cart</span>
+    <button class="drawer-close" id="cart-close">&times;</button>
+  </div>
+  <div class="drawer-body" id="cart-body">
+    <div class="cart-empty" id="cart-empty">
+      <img src="assets/mark_slate.png" alt="" style="width:80px;opacity:.15;display:block;margin:0 auto 16px">
+      <p style="text-align:center;color:rgba(27,37,56,.6);line-height:1.6">Your cart is empty.<br>Explore the collection to find pieces you love.</p>
+      <button class="btn-primary" id="cart-shop-btn" style="margin-top:16px">Browse the shop</button>
+    </div>
+    <div id="cart-items-list"></div>
+  </div>
+  <div class="drawer-footer" id="cart-footer" style="display:none">
+    <div class="cart-total-row">
+      <span>Total</span>
+      <span id="cart-total-label" class="cart-total-amt">0</span>
+    </div>
+    <p style="font-size:13px;color:rgba(27,37,56,.5);margin:4px 0 14px">Free white-glove delivery on every order.</p>
+    <button class="btn-primary" id="checkout-btn" style="width:100%">Proceed to Checkout</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ========================= PAGES ========================= -->
+<main id="main-content">
+
+  <!-- ======= HOME PAGE ======= -->
+  <div id="page-home" class="page active">
+    <section class="hero">
+      <img src="assets/interior.jpg" alt="A quiet interior with balanced, considered furniture" class="hero-img">
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <h1 class="hero-title">Spacial<br>Harmony</h1>
+        <div class="hero-sub">
+          <span class="hero-italic">reimagined</span>
+          <span class="hero-rule"></span>
+        </div>
+      </div>
+      <div class="hero-scroll">
+        <span class="hero-scroll-label">Scroll</span>
+        <span class="hero-scroll-line"></span>
+      </div>
+    </section>
+
+    <section class="about-section">
+      <div class="container">
+        <div class="two-col">
+          <div class="reveal">
+            <div class="eyebrow">Our philosophy</div>
+            <h2 class="section-title">Furniture that lets<br>a room breathe.</h2>
+            <p class="body-text">We design for the space between things. Every piece is drawn to sit in balance with the light, the wall, and the quiet around it — considered, unhurried, made to be lived with for decades rather than seasons.</p>
+            <p class="body-text" style="margin-bottom:32px">This is spatial harmony: not more, but rightly placed.</p>
+            <button class="btn-outline" data-page="about">Read our story &rarr;</button>
+          </div>
+          <div class="reveal about-img-wrap">
+            <img src="assets/interior.jpg" alt="A calm minimalist living room" class="about-img">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cards-section">
+      <div class="container">
+        <div class="two-col">
+          <div class="card card-light reveal">
+            <div class="eyebrow">The Shop</div>
+            <h3 class="card-title">Buy directly,<br>delivered with care.</h3>
+            <p class="card-body">Browse the full collection and order the pieces you love — made to last, delivered white-glove to your door.</p>
+            <div style="flex:1"></div>
+            <button class="btn-primary card-cta" data-page="shop">Enter the Shop &rarr;</button>
+          </div>
+          <div class="card card-dark reveal">
+            <img src="assets/mark_bone.png" alt="" class="card-bg-mark">
+            <div class="eyebrow" style="color:rgba(252,251,241,.6);position:relative">The Studio</div>
+            <h3 class="card-title" style="color:#FCFBF1;position:relative">See it in<br>your own room.</h3>
+            <p class="card-body" style="color:rgba(252,251,241,.72);position:relative">Place any piece in a true-to-scale model of your space, walk through it in 3D, and feel the harmony before you commit.</p>
+            <div style="flex:1"></div>
+            <button class="btn-bone card-cta" data-page="studio" style="position:relative">Explore the Studio &rarr;</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="steps-section">
+      <div class="container">
+        <div class="reveal steps-header">
+          <div class="eyebrow">How the Studio works</div>
+          <h2 class="section-title">Four quiet steps</h2>
+          <p class="body-text" style="color:rgba(27,37,56,.65)">From an empty room to the right pieces in place. Click a step to see what happens.</p>
+        </div>
+        <div class="two-col steps-grid reveal">
+          <div class="steps-list" id="steps-list"></div>
+          <div class="steps-preview">
+            <div class="steps-preview-img">
+              <img src="assets/interior.jpg" alt="" class="steps-bg-img">
+              <div class="steps-preview-grad"></div>
+              <img src="assets/mark_bone.png" alt="" class="steps-mark">
+            </div>
+            <div class="steps-preview-body">
+              <div class="steps-cap" id="steps-cap">Step 01</div>
+              <p class="steps-line" id="steps-line">Upload a photo of your room — or sketch the floor plan in two minutes.</p>
+              <div class="steps-bars" id="steps-bars"></div>
+              <button class="btn-bone-sm" data-page="studio">Open the Studio &rarr;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="assurance-strip">
+      <div class="container">
+        <div class="assurance-grid" id="assurance-grid-home"></div>
+      </div>
+    </section>
+
+    <section class="testimonial-section">
+      <div class="testimonial-inner">
+        <p class="testimonial-quote">&ldquo;The room finally feels finished. Nothing shouts — everything simply belongs.&rdquo;</p>
+        <div class="testimonial-attr">Marlow Reyes &middot; Collector, Copenhagen</div>
+      </div>
+    </section>
+
+    <footer class="footer" id="contact">
+      <img src="assets/mark_bone.png" alt="" class="footer-bg-mark">
+      <div class="container footer-inner">
+        <div class="footer-left">
+          <div class="eyebrow" style="color:rgba(252,251,241,.55)">Get in touch</div>
+          <h2 class="footer-headline">Let's find the<br>balance together.</h2>
+          <div class="footer-email-row">
+            <input type="email" id="footer-email" placeholder="Your email" class="footer-input">
+            <button class="btn-bone-sm" id="footer-submit">Get in touch</button>
+          </div>
+          <div class="footer-cols">
+            <div>
+              <div class="footer-col-label">Studio</div>
+              14 Warehouse Lane<br>London E2 8DP
+            </div>
+            <div>
+              <div class="footer-col-label">Reach us</div>
+              hello@symmet.studio<br>+44 20 7946 0102
+            </div>
+            <div>
+              <div class="footer-col-label">Follow</div>
+              Instagram &middot; Pinterest<br>Are.na &middot; Journal
+            </div>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <span class="footer-wordmark">symmet</span>
+          <div class="footer-bottom-right">
+            <a href="#" data-page="about" style="color:rgba(252,251,241,.7)">About</a>
+            <span>&copy; 2026 Symmet. Considered design, quietly made.</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ======= SHOP PAGE ======= -->
+  <div id="page-shop" class="page">
+    <div class="store-container">
+      <div class="store-hero">
+        <div>
+          <div class="eyebrow">The Shop</div>
+          <h1 class="store-title">Shop by category</h1>
+          <p class="body-text" style="max-width:52ch">Every Symmet piece is made to last and delivered white-glove to your door. Start with a room, or browse the whole collection.</p>
+        </div>
+        <button class="btn-primary" id="browse-all-btn">Browse all pieces &rarr;</button>
+      </div>
+      <div class="categories-grid" id="categories-grid"></div>
+      <div class="featured-section">
+        <div class="featured-header">
+          <h2 class="section-title" style="margin:0">Quietly popular</h2>
+          <a href="#" class="text-link" id="view-all-link">View all &rarr;</a>
+        </div>
+        <div class="products-grid" id="featured-grid"></div>
+      </div>
+      <div class="assurance-strip" style="border-top:1px solid rgba(27,37,56,.1);margin-top:40px">
+        <div class="assurance-grid" id="assurance-grid-shop"></div>
+      </div>
+      <div class="page-footer-row">
+        <a href="#" data-page="home" class="text-link">&larr; Back to symmet</a>
+        <span>Free white-glove delivery on every order.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= STORE GRID ======= -->
+  <div id="page-store" class="page">
+    <div class="store-container">
+      <div class="store-grid-header">
+        <h1 class="store-title">The Collection</h1>
+        <span class="result-count" id="result-count">0 pieces</span>
+      </div>
+      <div class="filter-bar" id="filter-bar"></div>
+      <div class="active-filters" id="active-filters" style="display:none"></div>
+      <div class="products-grid" id="store-grid"></div>
+      <div class="empty-state" id="store-empty" style="display:none">
+        <img src="assets/mark_slate.png" alt="" style="width:120px;opacity:.16">
+        <div class="empty-title">Nothing here — yet.</div>
+        <p style="color:rgba(27,37,56,.6)">No pieces match those filters.</p>
+        <button class="btn-primary" id="clear-filters-empty">Clear filters</button>
+      </div>
+      <div class="page-footer-row">
+        <a href="#" data-page="shop" class="text-link">&larr; Back to shop</a>
+        <span>Free white-glove delivery on every order.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= PRODUCT DETAIL ======= -->
+  <div id="page-product" class="page">
+    <div class="store-container">
+      <a href="#" class="text-link back-link" id="product-back">&larr; The Collection</a>
+      <div class="product-layout">
+        <div>
+          <div class="product-gallery">
+            <img src="assets/mark_slate.png" alt="" class="product-placeholder-mark">
+            <span class="product-shot-label">// product shot</span>
+          </div>
+          <div class="product-thumbs" id="product-thumbs"></div>
+        </div>
+        <div class="product-info">
+          <div class="eyebrow" id="pdp-cat"></div>
+          <h1 class="product-name" id="pdp-name"></h1>
+          <div class="product-price" id="pdp-price"></div>
+          <p class="body-text" id="pdp-desc"></p>
+          <div class="specs-accordion" id="specs-accordion"></div>
+          <div class="qty-row">
+            <div class="qty-ctrl">
+              <button class="qty-btn" id="qty-dec">&minus;</button>
+              <span class="qty-val" id="qty-val">1</span>
+              <button class="qty-btn" id="qty-inc">+</button>
+            </div>
+            <button class="btn-primary flex-1" id="add-to-cart-btn">Add to Cart</button>
+          </div>
+          <button class="btn-outline w-full" data-page="studio" style="margin-top:12px">Try in Studio</button>
+        </div>
+      </div>
+      <div class="related-section">
+        <h2 class="section-title" style="margin-bottom:26px">Pairs well with</h2>
+        <div class="products-grid" id="related-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= STUDIO PAGE ======= -->
+  <div id="page-studio" class="page studio-page">
+    <img src="assets/interior.jpg" alt="" class="studio-bg-img">
+    <div class="studio-overlay"></div>
+    <img src="assets/mark_bone.png" alt="" class="studio-bg-mark">
+    <div class="studio-content">
+      <div class="eyebrow" style="color:rgba(252,251,241,.55)">The Studio</div>
+      <h1 class="studio-title">Coming soon</h1>
+      <p class="studio-body">Try any piece in a true-to-scale 3D model of your own room — and see the harmony before it arrives. Join the waitlist to be first in.</p>
+      <div class="studio-form" id="studio-form">
+        <input type="email" id="studio-email" placeholder="Your email" class="studio-input">
+        <button class="btn-bone-sm" id="studio-join">Join</button>
+      </div>
+      <div class="studio-joined" id="studio-joined" style="display:none">You're on the list — we'll be in touch.</div>
+      <a href="#" data-page="home" class="back-link-light">&larr; Back to symmet</a>
+    </div>
+  </div>
+
+  <!-- ======= ABOUT PAGE ======= -->
+  <div id="page-about" class="page">
+    <section class="about-hero">
+      <div class="eyebrow">About Symmet</div>
+      <h1 class="about-hero-title">Not more, but<br>rightly placed.</h1>
+      <p class="about-hero-body">Symmet is a furniture studio built on a single idea — that a room feels calm when every object is in balance with the space around it. We design slowly, make honestly, and leave room to breathe.</p>
+    </section>
+    <section style="max-width:1280px;margin:0 auto;padding:0 clamp(20px,5vw,60px)">
+      <div class="reveal about-full-img-wrap">
+        <img src="assets/interior.jpg" alt="A calm, balanced living room interior" class="about-full-img">
+      </div>
+    </section>
+    <section class="philosophy-section">
+      <div class="container">
+        <div class="philosophy-grid">
+          <div class="reveal philosophy-label">
+            <div class="eyebrow">Our philosophy</div>
+          </div>
+          <div class="reveal">
+            <p class="philosophy-quote">We design for the space between things — the quiet that lets a single piece hold a room.</p>
+            <p class="body-text">Most furniture competes for attention. We do the opposite. Each Symmet piece is drawn to sit in balance with the light, the wall, and the objects already in your life. Nothing shouts; everything belongs.</p>
+            <p class="body-text">That restraint is deliberate. It takes longer to design a shape that disappears into a room than one that dominates it — but it's the difference between something you notice and something you live with for thirty years.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section style="max-width:1280px;margin:0 auto;padding:0 clamp(20px,5vw,60px) clamp(40px,7vh,80px)">
+      <div class="principles-grid">
+        <div class="reveal principle-card">
+          <div class="principle-num">01</div>
+          <h3 class="principle-title">Proportion first</h3>
+          <p class="principle-body">We start from the room, not the object. Every dimension is chosen so a piece sits in scale with the space it's made for.</p>
+        </div>
+        <div class="reveal principle-card">
+          <div class="principle-num">02</div>
+          <h3 class="principle-title">Honest materials</h3>
+          <p class="principle-body">Solid oak, honed travertine, undyed wool. Materials left close to their natural state, chosen to age well rather than hide wear.</p>
+        </div>
+        <div class="reveal principle-card">
+          <div class="principle-num">03</div>
+          <h3 class="principle-title">Made to keep</h3>
+          <p class="principle-body">Built by hand in small runs and guaranteed for life. We'd rather you buy once, well, than replace often.</p>
+        </div>
+      </div>
+    </section>
+    <section class="stats-strip">
+      <div class="container">
+        <div class="stats-grid">
+          <div><div class="stat-num">2019</div><div class="stat-label">Founded in London</div></div>
+          <div><div class="stat-num">100%</div><div class="stat-label">FSC-certified timber</div></div>
+          <div><div class="stat-num">Lifetime</div><div class="stat-label">Craftsmanship warranty</div></div>
+          <div><div class="stat-num">Carbon-neutral</div><div class="stat-label">Delivery, every order</div></div>
+        </div>
+      </div>
+    </section>
+    <section style="max-width:900px;margin:0 auto;padding:clamp(70px,12vh,140px) clamp(20px,6vw,40px);text-align:center">
+      <h2 style="margin:0 0 20px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:clamp(28px,4vw,52px);letter-spacing:-.02em;color:#1B2538">Find the balance in your own space.</h2>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:14px">
+        <button class="btn-primary" data-page="shop">Explore the collection</button>
+        <button class="btn-outline" data-page="studio">Try the Studio</button>
+      </div>
+      <div style="margin-top:44px"><a href="#" data-page="home" class="text-link">&larr; Back to symmet</a></div>
+    </section>
+  </div>
+
+  <!-- ======= CHECKOUT PAGE ======= -->
+  <div id="page-checkout" class="page">
+    <div class="checkout-container">
+      <div class="checkout-header">
+        <a href="#" data-page="home" class="checkout-brand">
+          <img src="assets/mark_slate.png" alt="" style="width:28px">
+          <span class="nav-name">symmet</span>
+        </a>
+        <a href="#" data-page="shop" class="text-link">&larr; Back to shop</a>
+      </div>
+      <div id="order-success" style="display:none" class="order-success">
+        <div class="success-check">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#405B72" stroke-width="1.8"><path d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <h1 class="success-title">Order received.</h1>
+        <p style="font-size:17px;color:rgba(27,37,56,.68)">Confirmation <strong id="order-no" style="color:#1B2538;font-weight:600"></strong> is on its way to your inbox.</p>
+        <p style="font-size:15px;color:rgba(27,37,56,.6);max-width:42ch;line-height:1.65;margin:0">Our team will be in touch within two working days to arrange white-glove delivery.</p>
+        <button class="btn-primary" data-page="store">Back to the Collection</button>
+      </div>
+      <div id="checkout-form-wrap">
+        <div class="checkout-form-layout">
+          <div>
+            <h1 class="checkout-title">Checkout</h1>
+            <div class="eyebrow" style="margin-bottom:18px">Shipping</div>
+            <div class="checkout-fields">
+              <input placeholder="First name" class="field">
+              <input placeholder="Last name" class="field">
+              <input placeholder="Address" class="field span-2">
+              <input placeholder="City" class="field">
+              <input placeholder="Postcode" class="field">
+            </div>
+            <div class="eyebrow" style="margin-bottom:18px;margin-top:30px">Payment</div>
+            <div class="checkout-fields">
+              <input placeholder="Card number" class="field span-2">
+              <input placeholder="MM / YY" class="field">
+              <input placeholder="CVC" class="field">
+            </div>
+          </div>
+          <div class="order-summary">
+            <div class="summary-title">Order summary</div>
+            <div id="summary-items"></div>
+            <div class="summary-row"><span>Delivery</span><span>White-glove &middot; Free</span></div>
+            <div class="summary-total-row">
+              <span class="summary-total-label">Total</span>
+              <span class="summary-total-amt" id="summary-total">£0</span>
+            </div>
+            <button class="btn-primary" id="place-order-btn" style="width:100%;margin-top:22px">Place order</button>
+            <p style="margin:14px 0 0;text-align:center;font-size:12px;color:rgba(27,37,56,.5)">Secure checkout &middot; no charge in this demo</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
