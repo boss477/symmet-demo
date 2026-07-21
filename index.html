@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Forum&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
 
@@ -25,6 +25,7 @@
 <!-- ========================= NAVIGATION ========================= -->
 <nav class="nav" id="main-nav">
   <div class="nav-pill">
+    <span class="nav-progress"><span class="nav-progress-fill" id="nav-progress-fill"></span></span>
     <a href="#" class="nav-brand" data-page="home">
       <img src="assets/mark_slate.png" alt="" class="nav-mark">
       <span class="nav-name">symmet</span>
@@ -81,7 +82,7 @@
   <!-- ======= HOME PAGE ======= -->
   <div id="page-home" class="page active">
     <section class="hero">
-      <img src="assets/interior.jpg" alt="A quiet interior with balanced, considered furniture" class="hero-img">
+      <img src="assets/interior.jpg" alt="A quiet interior with balanced, considered furniture" class="hero-img parallax-img">
       <div class="hero-overlay"></div>
       <div class="hero-content">
         <h1 class="hero-title">Spacial<br>Harmony</h1>
@@ -300,7 +301,7 @@
 
   <!-- ======= STUDIO PAGE ======= -->
   <div id="page-studio" class="page studio-page">
-    <img src="assets/interior.jpg" alt="" class="studio-bg-img">
+    <img src="assets/interior.jpg" alt="" class="studio-bg-img parallax-img">
     <div class="studio-overlay"></div>
     <img src="assets/mark_bone.png" alt="" class="studio-bg-mark">
     <div class="studio-content">
@@ -325,7 +326,7 @@
     </section>
     <section style="max-width:1280px;margin:0 auto;padding:0 clamp(20px,5vw,60px)">
       <div class="reveal about-full-img-wrap">
-        <img src="assets/interior.jpg" alt="A calm, balanced living room interior" class="about-full-img">
+        <img src="assets/interior.jpg" alt="A calm, balanced living room interior" class="about-full-img parallax-img">
       </div>
     </section>
     <section class="philosophy-section">
@@ -437,6 +438,6 @@
 
 </main>
 
-<script src="app.js"></script>
+<script src="app.js?v=2"></script>
 </body>
 </html>

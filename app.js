@@ -101,8 +101,13 @@ function navigate(page, opts = {}) {
 
   // scroll to contact
   if (opts.scroll === 'contact') {
-    setTimeout(() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' }), 100);
+    setTimeout(() => scrollToEl(document.getElementById('contact')), 100);
   }
+}
+
+function scrollToEl(el) {
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth' });
 }
 
 /* ---- GLOBAL CLICK DELEGATION ---- */
@@ -116,8 +121,8 @@ document.addEventListener('click', (e) => {
   // contact nav link
   if (e.target.closest('#nav-contact-link')) {
     e.preventDefault();
-    if (currentPage !== 'home') { navigate('home'); setTimeout(() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' }), 400); }
-    else document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+    if (currentPage !== 'home') { navigate('home'); setTimeout(() => scrollToEl(document.getElementById('contact')), 400); }
+    else scrollToEl(document.getElementById('contact'));
   }
 });
 
@@ -144,12 +149,55 @@ function initSplash() {
   setTimeout(endSplash, 5200);
 }
 
-/* ---- NAV SCROLL ---- */
+/* ---- NAV SCROLL + PROGRESS ---- */
 function initNavScroll() {
   const pill = document.querySelector('.nav-pill');
-  window.addEventListener('scroll', () => {
-    if (window.scrollY > 30) pill.classList.add('scrolled');
+  const fill = document.getElementById('nav-progress-fill');
+
+  function onScroll() {
+    const y = window.scrollY;
+    if (y > 30) pill.classList.add('scrolled');
     else pill.classList.remove('scrolled');
+
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = max > 0 ? Math.min(100, Math.max(0, (y / max) * 100)) : 0;
+    if (fill) fill.style.width = `${pct}%`;
+  }
+
+  window.addEventListener('scroll', onScroll);
+  onScroll();
+}
+
+/* ---- PARALLAX ---- */
+function initParallax() {
+  function update() {
+    document.querySelectorAll('.parallax-img').forEach(el => {
+      const parent = el.parentElement;
+      const rect = parent.getBoundingClientRect();
+      if (rect.bottom < 0 || rect.top > window.innerHeight) return;
+      const offset = rect.top * 0.15;
+      el.style.transform = `translateY(${offset}px) scale(1.15)`;
+    });
+  }
+  window.addEventListener('scroll', update);
+  update();
+}
+
+/* ---- MAGNETIC BUTTONS ---- */
+function initMagnetic() {
+  const SELECTOR = '.btn-primary, .btn-outline, .btn-bone, .btn-bone-sm';
+  const STRENGTH = 0.25;
+
+  document.addEventListener('mousemove', (e) => {
+    const btn = e.target.closest(SELECTOR);
+    document.querySelectorAll(SELECTOR).forEach(el => {
+      if (el !== btn) el.style.transform = '';
+    });
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    const x = (e.clientX - rect.left - rect.width / 2) * STRENGTH;
+    const y = (e.clientY - rect.top - rect.height / 2) * STRENGTH;
+    btn.style.transform = `translate(${x}px, ${y}px)`;
   });
 }
 
@@ -164,8 +212,14 @@ function initReveal() {
     });
   }, { threshold: 0.15 });
 
+  // stagger siblings that reveal together (grids, cards)
+  const groups = new Map();
   document.querySelectorAll('.reveal').forEach(el => {
     el.classList.remove('visible');
+    const parent = el.parentElement;
+    const i = groups.get(parent) ?? 0;
+    el.style.setProperty('--stagger', Math.min(i, 5));
+    groups.set(parent, i + 1);
     observer.observe(el);
   });
 }
@@ -301,6 +355,27 @@ function renderSteps() {
 
   renderStepBtns();
   updateStepPreview();
+  initStepsScrollSync();
+}
+
+function initStepsScrollSync() {
+  const list = document.getElementById('steps-list');
+  if (!list) return;
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const idx = Number(entry.target.dataset.step);
+      if (idx === activeStep) return;
+      activeStep = idx;
+      list.querySelectorAll('.step-btn').forEach(b => b.classList.toggle('active', Number(b.dataset.step) === idx));
+      const s = STEPS[activeStep];
+      document.getElementById('steps-cap').textContent = s.cap;
+      document.getElementById('steps-line').textContent = s.line;
+      const bars = document.getElementById('steps-bars');
+      if (bars) bars.innerHTML = STEPS.map((_, i) => `<span class="step-bar${i === activeStep ? ' active' : ''}"></span>`).join('');
+    });
+  }, { rootMargin: '-45% 0px -45% 0px', threshold: 0 });
+  list.querySelectorAll('.step-btn').forEach(btn => observer.observe(btn));
 }
 
 function initFooterForm() {
@@ -611,6 +686,8 @@ function renderCheckout() {
 function init() {
   initSplash();
   initNavScroll();
+  initParallax();
+  initMagnetic();
   initCart();
   initStudio();
   initFooterForm();
