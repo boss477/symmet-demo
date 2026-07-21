@@ -315,12 +315,13 @@ function initCart() {
 function renderHomeAssurances() {
   const grid = document.getElementById('assurance-grid-home');
   if (!grid) return;
-  grid.innerHTML = ASSURANCES.map(a => `
-    <div class="assurance-item reveal">
+  const items = ASSURANCES.map(a => `
+    <div class="assurance-item">
       <div class="assurance-title">${a.title}</div>
       <p class="assurance-body">${a.body}</p>
     </div>
   `).join('');
+  grid.innerHTML = items + items;
   initReveal();
 }
 
@@ -437,12 +438,13 @@ function renderFeatured() {
 function renderAssurances(id) {
   const grid = document.getElementById(id);
   if (!grid) return;
-  grid.innerHTML = ASSURANCES.map(a => `
+  const items = ASSURANCES.map(a => `
     <div class="assurance-item">
       <div class="assurance-title">${a.title}</div>
       <p class="assurance-body">${a.body}</p>
     </div>
   `).join('');
+  grid.innerHTML = items + items;
 }
 
 /* ---- STORE GRID ---- */
