@@ -130,7 +130,6 @@ document.addEventListener('click', (e) => {
 function initSplash() {
   const splash = document.getElementById('splash');
   const video = document.getElementById('splash-video');
-  const fallback = document.getElementById('splash-fallback');
 
   function endSplash() {
     splash.classList.add('hidden');
@@ -139,14 +138,12 @@ function initSplash() {
 
   document.getElementById('skip-btn').addEventListener('click', endSplash);
 
-  video.addEventListener('error', () => {
-    video.style.display = 'none';
-    fallback.style.display = 'flex';
-  });
+  // If the video can't play at all, don't leave the visitor stuck.
+  video.addEventListener('error', endSplash);
 
-  // Auto-end after video ends or after 5s
+  // Let the full video play, then end. Safety timeout in case 'ended' never fires.
   video.addEventListener('ended', endSplash);
-  setTimeout(endSplash, 5200);
+  setTimeout(endSplash, 9000);
 }
 
 /* ---- NAV SCROLL + PROGRESS ---- */
