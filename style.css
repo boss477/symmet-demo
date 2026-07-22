@@ -175,7 +175,7 @@ img { display: block; max-width: 100%; }
   left: 0;
   bottom: 0;
   width: 100%;
-  height: 5px;
+  height: 3px;
   background: rgba(27,37,56,.08);
   border-radius: 9999px;
 }
