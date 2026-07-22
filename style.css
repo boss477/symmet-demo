@@ -757,19 +757,6 @@ img { display: block; max-width: 100%; }
   border-top: 1px solid rgba(252,251,241,.08);
   border-bottom: 1px solid rgba(252,251,241,.08);
 }
-.assurance-strip::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 100%;
-  background-image: radial-gradient(ellipse 20% 130% at 50% 50%, rgba(96,131,160,.85), rgba(96,131,160,0) 55%);
-  background-repeat: repeat-x;
-  background-size: 25% 100%;
-  pointer-events: none;
-  z-index: 0;
-}
 .assurance-grid {
   position: relative;
   z-index: 1;
