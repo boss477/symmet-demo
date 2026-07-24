@@ -87,7 +87,7 @@ img { display: block; max-width: 100%; }
   object-fit: cover;
 }
 @media (max-width: 600px) {
-  .splash video { object-fit: contain; }
+  .splash video { transform: scale(.82); }
 }
 .skip-btn {
   position: absolute;
