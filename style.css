@@ -162,13 +162,13 @@ img { display: block; max-width: 100%; }
   padding: 2px 8px 2px 4px;
   text-decoration: none;
 }
-.nav-mark { width: 34px; height: auto; }
+.nav-mark { width: 64px; height: auto; filter: brightness(0.70); }
 .nav-name {
   font-family: 'Neue Machina', 'Space Grotesk', sans-serif;
   font-weight: 700;
-  font-size: 16px;
+  font-size: 18px;
   letter-spacing: .02em;
-  color: #1B2538;
+  color: #000;
 }
 .nav-links {
   display: flex;
