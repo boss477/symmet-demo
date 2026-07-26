@@ -27,20 +27,39 @@ const CATEGORIES = [
   { tag: 'LIGHTING',  name: 'Lighting',       count: 6,  blurb: 'Quiet pendants and floor lamps that cast warm, directional light.' },
 ];
 
-const PRODUCTS = [
-  { id:1,  name: 'Brøm Lounge Chair',    price: 3200,  category: 'Chairs',   material: 'Oak & Bouclé',     room: 'Living',  desc: 'A low-slung lounge chair with curved oak legs and undyed bouclé upholstery. Wide enough to sink into; light enough to move easily.' },
-  { id:2,  name: 'Kaland Side Table',    price: 980,   category: 'Tables',   material: 'Honed Travertine', room: 'Living',  desc: 'A solid travertine side table with a deliberately thick top and tapered legs. The natural vein pattern means no two are the same.' },
-  { id:3,  name: 'Orm Shelving Unit',    price: 2400,  category: 'Shelving', material: 'Solid Oak',        room: 'Study',   desc: 'A modular open shelving system in solid oak with adjustable shelves and concealed fixings. Designed to age with your collection.' },
-  { id:4,  name: 'Halv Pendant Light',   price: 640,   category: 'Lighting', material: 'Spun Aluminium',   room: 'Dining',  desc: 'A hand-spun aluminium pendant with a linen cord and dimmable warm-white bulb included. Casts a soft pool of light over a table.' },
-  { id:5,  name: 'Flong Dining Chair',   price: 1100,  category: 'Chairs',   material: 'Oak & Leather',    room: 'Dining',  desc: 'A dining chair with a slender oak frame and hand-stitched natural leather seat. Comfortable enough for a long dinner, considered enough for every day.' },
-  { id:6,  name: 'Strid Coffee Table',   price: 1800,  category: 'Tables',   material: 'Smoked Oak',       room: 'Living',  desc: 'A coffee table in smoked solid oak with a gently bowed top surface. Low, grounded, and quiet at the centre of a room.' },
-  { id:7,  name: 'Grøv Floor Lamp',      price: 760,   category: 'Lighting', material: 'Blackened Steel',  room: 'Living',  desc: 'A floor lamp in blackened steel with a pivoting arm and linen shade. Directional but soft — designed to light a corner, not fill a room.' },
-  { id:8,  name: 'Lund Dining Table',    price: 4200,  category: 'Tables',   material: 'Solid Oak',        room: 'Dining',  desc: 'A large dining table in solid European oak with a hand-planed top and hand-cut mortice-and-tenon joinery. Seats six to eight comfortably.' },
-  { id:9,  name: 'Moss Reading Chair',   price: 2100,  category: 'Chairs',   material: 'Oak & Linen',      room: 'Study',   desc: 'A high-backed reading chair with solid oak legs and a linen upholstered seat and back. Quiet and enveloping; made for long afternoons.' },
-  { id:10, name: 'Veir Shelving System', price: 3100,  category: 'Shelving', material: 'Oiled Oak',        room: 'Living',  desc: 'A floor-to-ceiling shelving system with oiled oak uprights and adjustable shelves. Designed to hold books, ceramics, and negative space.' },
-  { id:11, name: 'Kalk Pendant Set',     price: 1280,  category: 'Lighting', material: 'Spun Ceramic',     room: 'Dining',  desc: 'A set of three hand-spun ceramic pendants on linen cords, designed to cluster over a dining table. Each shade is slightly different.' },
-  { id:12, name: 'Tjorn Side Chair',     price: 890,   category: 'Chairs',   material: 'Beech & Rattan',   room: 'Dining',  desc: 'A light dining chair with a beech frame and rattan seat. Stackable, easy to move, and quiet enough to disappear into a room.' },
-];
+const SHOP_API_BASE = 'https://symmet-shop-api.iidaworkzz.workers.dev';
+
+let PRODUCTS = [];
+
+function prettyName(code, category) {
+  const suffix = code.replace(/^SMKAP[\s-]*/i, '').trim();
+  return `${category} ${suffix}`;
+}
+
+async function loadProducts() {
+  try {
+    const res = await fetch(`${SHOP_API_BASE}/api/products`);
+    const rows = await res.json();
+    PRODUCTS = rows.map(r => ({
+      id: r.product_code,
+      name: prettyName(r.product_code, r.category),
+      price: r.min_price,
+      maxPrice: r.max_price,
+      category: r.category,
+      image: r.image_url,
+      desc: '',
+    }));
+  } catch (err) {
+    console.error('Failed to load products from shop API', err);
+    PRODUCTS = [];
+  }
+}
+
+async function loadProductDetail(code) {
+  const res = await fetch(`${SHOP_API_BASE}/api/products/${encodeURIComponent(code)}`);
+  if (!res.ok) return null;
+  return res.json();
+}
 
 const SPECS = [
   { label: 'Dimensions', body: 'W 82 × D 76 × H 70 cm. Seat height: 38 cm. Weight: 14 kg.' },
@@ -260,11 +279,11 @@ function renderCartItems() {
   list.innerHTML = cart.map(item => `
     <div class="cart-item">
       <div class="cart-item-thumb">
-        <img src="assets/mark_slate.png" alt="">
+        <img src="${item.image}" alt="" onerror="this.onerror=null;this.src='assets/mark_slate.png';">
       </div>
       <div class="cart-item-info">
         <div class="cart-item-name">${item.name}</div>
-        <div class="cart-item-meta">${item.material} &middot; ×${item.qty}</div>
+        <div class="cart-item-meta">×${item.qty}</div>
       </div>
       <div class="cart-item-price">${fmt(item.price * item.qty)}</div>
       <button class="cart-item-remove" data-remove="${item.id}" aria-label="Remove">&times;</button>
@@ -272,7 +291,7 @@ function renderCartItems() {
   `).join('');
 
   list.querySelectorAll('[data-remove]').forEach(btn => {
-    btn.addEventListener('click', () => removeFromCart(Number(btn.dataset.remove)));
+    btn.addEventListener('click', () => removeFromCart(btn.dataset.remove));
   });
 }
 
@@ -453,7 +472,6 @@ function renderStore() {
 function getFilteredProducts() {
   return PRODUCTS.filter(p => {
     if (activeFilters.category && activeFilters.category.length > 0 && !activeFilters.category.includes(p.category)) return false;
-    if (activeFilters.room && activeFilters.room.length > 0 && !activeFilters.room.includes(p.room)) return false;
     return true;
   });
 }
@@ -462,11 +480,9 @@ function renderFilterBar() {
   const bar = document.getElementById('filter-bar');
   if (!bar) return;
   const categories = [...new Set(PRODUCTS.map(p => p.category))];
-  const rooms = [...new Set(PRODUCTS.map(p => p.room))];
 
   const groups = [
     { label: 'Category', key: 'category', options: categories },
-    { label: 'Room',     key: 'room',     options: rooms },
   ];
 
   bar.innerHTML = groups.map(g => `
@@ -557,15 +573,14 @@ function productCardHTML(p) {
   return `
     <div class="product-card reveal" data-product-id="${p.id}">
       <div class="product-card-img">
-        <img src="assets/mark_slate.png" alt="${p.name}">
+        <img src="${p.image}" alt="${p.name}" loading="lazy" onerror="this.onerror=null;this.src='assets/mark_slate.png';">
         <span class="product-cat-label">${p.category}</span>
         <button class="quick-add" data-product-id="${p.id}" aria-label="Quick add">+</button>
       </div>
       <div class="product-card-meta">
         <span class="product-card-name">${p.name}</span>
-        <span class="product-card-price">${fmt(p.price)}</span>
+        <span class="product-card-price">${fmt(p.price)}${p.maxPrice > p.price ? '+' : ''}</span>
       </div>
-      <div class="product-card-sub">${p.material} &middot; ${p.room}</div>
     </div>
   `;
 }
@@ -574,7 +589,7 @@ function attachProductCardEvents(container) {
   container.querySelectorAll('.product-card').forEach(card => {
     card.addEventListener('click', (e) => {
       if (e.target.closest('.quick-add')) return;
-      const id = Number(card.dataset.productId);
+      const id = card.dataset.productId;
       const product = PRODUCTS.find(p => p.id === id);
       navigate('product', { product });
     });
@@ -582,7 +597,7 @@ function attachProductCardEvents(container) {
   container.querySelectorAll('.quick-add').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const id = Number(btn.dataset.productId);
+      const id = btn.dataset.productId;
       const product = PRODUCTS.find(p => p.id === id);
       if (product) addToCart(product, 1);
     });
@@ -590,7 +605,7 @@ function attachProductCardEvents(container) {
 }
 
 /* ---- PRODUCT DETAIL ---- */
-function renderProduct(product) {
+async function renderProduct(product) {
   if (!product) return;
   currentProduct = product;
   pdpQty = 1;
@@ -601,9 +616,24 @@ function renderProduct(product) {
   document.getElementById('pdp-desc').textContent = product.desc;
   document.getElementById('qty-val').textContent = pdpQty;
 
+  const img = document.getElementById('pdp-image');
+  const shotLabel = document.getElementById('pdp-shot-label');
+  if (product.image) {
+    img.src = product.image;
+    img.onerror = () => { img.src = 'assets/mark_slate.png'; shotLabel.style.display = ''; };
+    shotLabel.style.display = 'none';
+  }
+
   // thumbs
   const thumbs = document.getElementById('product-thumbs');
   thumbs.innerHTML = [1,2,3].map((_, i) => `<span class="product-thumb${i===0?' active':''}"></span>`).join('');
+
+  const detail = await loadProductDetail(product.id);
+  if (detail && currentProduct === product) {
+    const desc = detail.variants?.[0]?.description || '';
+    document.getElementById('pdp-desc').textContent = desc;
+    currentProduct.desc = desc;
+  }
 
   // specs accordion
   specsOpen = {};
@@ -728,7 +758,7 @@ function initShopCarousel() {
 }
 
 /* ---- INIT ---- */
-function init() {
+async function init() {
   initSplash();
   initNavScroll();
   initParallax();
@@ -741,6 +771,10 @@ function init() {
   // Initial page
   navigate('home', { force: true });
   setTimeout(initReveal, 600);
+
+  await loadProducts();
+  renderFeatured();
+  if (currentPage === 'store') renderStore();
 }
 
 document.addEventListener('DOMContentLoaded', init);
