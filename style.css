@@ -163,16 +163,19 @@ img { display: block; max-width: 100%; }
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 2px 8px 2px 4px;
+  padding: 8px 14px;
+  border-radius: 9999px;
+  transition: background .25s ease;
   text-decoration: none;
 }
+.nav-brand:hover { background: rgba(27,37,56,.06); }
 .nav-mark { width: 64px; height: auto; filter: brightness(0.70); }
 .nav-name {
   font-family: 'Neue Machina', 'Space Grotesk', sans-serif;
   font-weight: 700;
-  font-size: 18px;
+  font-size: 16px;
   letter-spacing: .02em;
-  color: #000;
+  color: #1B2538;
 }
 .nav-links {
   display: flex;
@@ -182,10 +185,11 @@ img { display: block; max-width: 100%; }
 }
 .nav-link {
   font-family: 'Neue Machina', 'Space Grotesk', sans-serif;
-  font-weight: 500;
-  font-size: 14px;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: .02em;
   color: #1B2538;
-  padding: 9px 15px;
+  padding: 8px 14px;
   border-radius: 9999px;
   transition: background .25s ease;
   text-decoration: none;
@@ -521,48 +525,84 @@ img { display: block; max-width: 100%; }
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center;
+  object-position: center center;
 }
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(252,251,241,.08) 0%, rgba(252,251,241,0) 32%, rgba(252,251,241,.35) 100%);
+  background: transparent;
+  pointer-events: none;
+}
+.hero-top-left {
+  position: absolute;
+  top: clamp(24px, 4vw, 40px);
+  left: clamp(24px, 5vw, 64px);
+  z-index: 10;
+  font-family: 'Neue Machina', 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: clamp(22px, 2.5vw, 30px);
+  letter-spacing: .02em;
+  color: #1B2538;
+  opacity: 0;
+  animation: symHeroText 1s cubic-bezier(.22,.61,.36,1) .3s both;
+}
+.hero-top-right {
+  position: absolute;
+  top: clamp(12px, 2vw, 24px);
+  right: clamp(24px, 5vw, 64px);
+  z-index: 10;
+  width: clamp(80px, 9vw, 120px);
+  height: auto;
+  filter: brightness(0.15) contrast(1.5);
+  opacity: 0;
+  animation: symHeroText 1s cubic-bezier(.22,.61,.36,1) .3s both;
 }
 .hero-content {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 0 clamp(20px,6vw,96px) clamp(40px,7vh,84px);
+  padding: 0 clamp(20px,6vw,96px) clamp(12px,2.5vh,32px) clamp(8px,1.5vw,24px);
   display: flex;
   flex-direction: column;
-  gap: 8px;
 }
-.hero-title {
-  margin: 0;
-  font-family: 'Neue Machina', 'Space Grotesk', sans-serif;
-  font-weight: 700;
-  font-size: clamp(44px, 8.5vw, 132px);
-  line-height: .94;
-  letter-spacing: -.02em;
-  color: #1B2538;
+.hero-title-container {
+  display: inline-flex;
+  align-items: baseline;
+  gap: clamp(16px, 2.5vw, 36px);
   opacity: 0;
   animation: symHeroText 1s cubic-bezier(.22,.61,.36,1) .5s both;
 }
-.hero-sub {
-  display: flex;
+.hero-title-spacial {
+  font-family: 'Neue Machina', 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: clamp(26px, 4vw, 60px);
+  line-height: .95;
+  letter-spacing: -.02em;
+  color: #1B2538;
+}
+.hero-title-harmony-block {
+  display: inline-flex;
+  flex-direction: column;
   align-items: center;
-  gap: 18px;
-  opacity: 0;
-  animation: symHeroText 1s cubic-bezier(.22,.61,.36,1) .8s both;
 }
-.hero-italic {
+.hero-title-harmony {
+  font-family: 'Neue Machina', 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: clamp(26px, 4vw, 60px);
+  line-height: .95;
+  letter-spacing: -.02em;
+  color: #1B2538;
+}
+.hero-sub-reimagined {
   font-family: 'Forum Local', Forum, serif;
-  font-size: clamp(18px, 2vw, 26px);
-  color: #405B72;
+  font-size: clamp(14px, 1.8vw, 24px);
+  color: #1B2538;
   font-style: italic;
+  margin-top: 2px;
+  text-align: center;
 }
-.hero-rule { flex: 1; max-width: 120px; height: 1px; background: rgba(27,37,56,.3); }
+.hero-rule { display: none; }
 
 /* ---- ABOUT SECTION ---- */
 .about-section {
