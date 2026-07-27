@@ -557,6 +557,9 @@ img { display: block; max-width: 100%; }
   opacity: 0;
   animation: symHeroText 1s cubic-bezier(.22,.61,.36,1) .3s both;
 }
+@media (max-width: 640px) {
+  .hero-top-left { top: 78px; }
+}
 .hero-content {
   position: absolute;
   left: 0;
