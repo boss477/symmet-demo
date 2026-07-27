@@ -700,14 +700,47 @@ function renderCheckout() {
   document.getElementById('order-success').style.display = 'none';
   document.getElementById('checkout-form-wrap').style.display = 'block';
 
-  document.getElementById('place-order-btn').onclick = () => {
-    const orderNo = `SYM-${Math.floor(Math.random() * 90000 + 10000)}`;
-    document.getElementById('order-no').textContent = orderNo;
-    document.getElementById('order-success').style.display = 'flex';
-    document.getElementById('checkout-form-wrap').style.display = 'none';
-    cart = [];
-    updateCartBadge();
-    updateCartFooter();
+  document.getElementById('place-order-btn').onclick = async () => {
+    const field = (id) => document.getElementById(id).value.trim();
+    const order = {
+      firstName: field('co-first'),
+      lastName: field('co-last'),
+      email: field('co-email'),
+      address: field('co-address'),
+      city: field('co-city'),
+      postcode: field('co-postcode'),
+      items: cart.map(c => ({ id: c.id, name: c.name, price: c.price, qty: c.qty })),
+      total: cartTotal(),
+    };
+    if (!order.firstName || !order.lastName || !order.email || !order.address || !order.city || !order.postcode) {
+      showToast('Fill in all shipping fields to place your order.');
+      return;
+    }
+
+    const btn = document.getElementById('place-order-btn');
+    btn.disabled = true;
+    btn.textContent = 'Placing order...';
+    try {
+      const res = await fetch(`${SHOP_API_BASE}/api/checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(order),
+      });
+      if (!res.ok) throw new Error('checkout failed');
+      const { orderNo } = await res.json();
+      document.getElementById('order-no').textContent = orderNo;
+      document.getElementById('order-success').style.display = 'flex';
+      document.getElementById('checkout-form-wrap').style.display = 'none';
+      cart = [];
+      updateCartBadge();
+      updateCartFooter();
+    } catch (err) {
+      console.error('Failed to place order', err);
+      showToast('Could not place your order — please try again.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Place order';
+    }
   };
 }
 
