@@ -669,7 +669,7 @@ function productCardHTML(p) {
       </div>
       <div class="product-card-meta">
         <span class="product-card-name">${p.name}</span>
-        <span class="product-card-price">${p.noPrice ? '' : priceLabel(p)}${!p.noPrice && p.price != null && p.maxPrice > p.price ? '+' : ''}</span>
+        <span class="product-card-price">${p.noPrice ? '' : priceLabel(p)}</span>
       </div>
     </div>
   `;
@@ -738,7 +738,7 @@ function variantPriceHTML(v) {
   const tops = variantTopOptions(v);
   if (tops.length > 1) {
     const minP = Math.min(...tops.map(([, p]) => p));
-    return `${fmt(final ?? minP)}+ <div style="font-size:14px;font-weight:400;margin-top:8px;color:rgba(27,37,56,.65)">` +
+    return `${fmt(final ?? minP)} <div style="font-size:14px;font-weight:400;margin-top:8px;color:rgba(27,37,56,.65)">` +
       tops.map(([n, p]) => `${n} ${fmt(p)}`).join(' &middot; ') + '</div>';
   }
   if (final == null) return tops.length === 1 ? fmt(tops[0][1]) : 'Price on request';
