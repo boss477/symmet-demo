@@ -1050,6 +1050,19 @@ img { display: block; max-width: 100%; }
 }
 .category-card:hover { transform: translateY(-6px) scale(1.015); box-shadow: 0 28px 56px rgba(27,37,56,.12); }
 .category-card-bg { position: absolute; right: -10%; bottom: -8%; width: 56%; opacity: .1; pointer-events: none; }
+/* showcase cards (e.g. New Sofa) carry a real product photo: show it whole,
+   vertically centred on the right — not as a cropped ghost watermark */
+.category-card-bg.is-photo {
+  right: 5%;
+  top: 50%;
+  bottom: auto;
+  transform: translateY(-50%);
+  width: 44%;
+  max-height: 68%;
+  object-fit: contain;
+  opacity: .92;
+}
+.category-card:has(.is-photo) .category-blurb { max-width: 24ch; }
 .category-tag {
   position: relative;
   font-family: 'Neue Machina','Space Grotesk',sans-serif;

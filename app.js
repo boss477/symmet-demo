@@ -477,8 +477,8 @@ function renderCategories() {
   if (!grid) return;
   const cards = [...CATEGORIES, NEW_SOFA_CARD];
   grid.innerHTML = cards.map(c => `
-    <div class="category-card reveal" ${c.group ? `data-group="${c.group}"` : `data-cat="${c.name}"`}>
-      <img src="${c.img || 'assets/mark_slate.png'}" alt="" class="category-card-bg">
+      <div class="category-card reveal" ${c.group ? `data-group="${c.group}"` : `data-cat="${c.name}"`}>
+      <img src="${c.img || 'assets/mark_slate.png'}" alt="" class="category-card-bg${c.img ? ' is-photo' : ''}">
       <div style="position:relative;display:flex;justify-content:space-between;align-items:flex-start">
         <span class="category-tag">${c.tag}</span>
         <span class="category-count">${c.count} pieces</span>
@@ -505,10 +505,14 @@ function renderCategories() {
   initReveal();
 }
 
+/* Quietly popular — curated picks by display name: Lounge Seating No. 47, 48, 33, 9, 6
+   (s_no -> code: 47->LS033, 48->LS034, 33->LS028, 9->LS009, 6->LS006) */
+const FEATURED_CODES = ['SMKAP LS 033', 'SMKAP LS 034', 'SMKAP LS 028', 'SMKAP LS 009', 'SMKAP LS 006'];
+
 function renderFeatured() {
   const grid = document.getElementById('featured-grid');
   if (!grid) return;
-  const featured = PRODUCTS.slice(0, 4);
+  const featured = FEATURED_CODES.map(code => PRODUCTS.find(p => p.id === code)).filter(Boolean);
   grid.innerHTML = featured.map(p => productCardHTML(p)).join('');
   attachProductCardEvents(grid);
   initReveal();
