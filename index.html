@@ -8,7 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Forum&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=15">
+  <link rel="stylesheet" href="style.css?v=19">
+  <script type="module" src="https://unpkg.com/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
 </head>
 <body>
 
@@ -74,7 +75,7 @@
   <!-- ======= HOME PAGE ======= -->
   <div id="page-home" class="page active">
     <section class="hero">
-      <img src="assets/aa.jpg" alt="A quiet interior with balanced, considered furniture" class="hero-img parallax-img">
+      <img src="assets/bg.jpg" alt="A quiet interior with balanced, considered furniture" class="hero-img parallax-img">
       <div class="hero-overlay"></div>
       <div class="hero-top-left">symmet</div>
       <img src="assets/mark_slate.png" alt="Symmet chair symbol" class="hero-top-right">
@@ -140,16 +141,16 @@
         <div class="reveal shop-carousel" id="shop-carousel">
           <div class="shop-carousel-track">
             <div class="shop-carousel-item" data-index="0">
-              <img src="assets/mark_slate.png" alt="" class="shop-preview-mark">
-              <span class="shop-preview-label">// product shot</span>
+              <img src="https://gqgfttnmnnhglbdaydny.supabase.co/storage/v1/object/public/shops-images/SMKAP_LS_005.png" alt="Lounge Seating No. 5" class="shop-preview-img">
+              <span class="shop-preview-label">Lounge Seating No. 5</span>
             </div>
             <div class="shop-carousel-item" data-index="1">
-              <img src="assets/mark_slate.png" alt="" class="shop-preview-mark">
-              <span class="shop-preview-label">// product shot</span>
+              <img src="https://gqgfttnmnnhglbdaydny.supabase.co/storage/v1/object/public/shops-images/SMKAP_LS_006.png" alt="Lounge Seating No. 6" class="shop-preview-img">
+              <span class="shop-preview-label">Lounge Seating No. 6</span>
             </div>
             <div class="shop-carousel-item" data-index="2">
-              <img src="assets/mark_slate.png" alt="" class="shop-preview-mark">
-              <span class="shop-preview-label">// product shot</span>
+              <img src="https://gqgfttnmnnhglbdaydny.supabase.co/storage/v1/object/public/shops-images/SMKAP_LS_037.png" alt="Lounge Seating No. 51" class="shop-preview-img">
+              <span class="shop-preview-label">Lounge Seating No. 51</span>
             </div>
           </div>
           <div class="shop-carousel-dots" id="shop-carousel-dots">
@@ -228,7 +229,7 @@
           <div class="footer-cols">
             <div>
               <div class="footer-col-label">Studio</div>
-              14 Warehouse Lane<br>London E2 8DP
+              Think Tank Consultancy<br>AC 105D, AC Block<br>Shalimar bagh<br>Delhi 110088
             </div>
             <div>
               <div class="footer-col-label">Reach us</div>
@@ -325,6 +326,10 @@
           <div class="eyebrow" id="pdp-cat"></div>
           <h1 class="product-name" id="pdp-name"></h1>
           <div class="product-price" id="pdp-price"></div>
+          <div class="filter-group" id="pdp-variants" style="margin-top:14px;display:none">
+            <span class="filter-label" style="width:auto" id="pdp-variants-label">Options</span>
+            <div class="filter-options" id="pdp-variant-options"></div>
+          </div>
           <p class="body-text" id="pdp-desc"></p>
           <div class="specs-accordion" id="specs-accordion"></div>
           <div class="qty-row">
@@ -335,6 +340,7 @@
             </div>
             <button class="btn-primary flex-1" id="add-to-cart-btn">Add to Cart</button>
           </div>
+          <button class="btn-outline w-full" id="view-3d-btn" style="margin-top:12px;display:none">View in 3D</button>
           <button class="btn-outline w-full" data-page="studio" style="margin-top:12px">Try in Studio</button>
         </div>
       </div>
@@ -451,6 +457,14 @@
         <div class="checkout-form-layout">
           <div>
             <h1 class="checkout-title">Checkout</h1>
+            <div class="eyebrow" style="margin-bottom:18px">Contact</div>
+            <div class="checkout-fields">
+              <div class="field span-2" style="height:auto;min-height:92px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:10px;color:#1B2538">
+                <span style="color:rgba(27,37,56,.58);line-height:1.55">If you want to buy this piece, contact us and our team will confirm availability, payment, and delivery.</span>
+                <a href="tel:+919818381951" style="color:#405B72;font-weight:700;text-decoration:none;white-space:nowrap">+91 98183 81951</a>
+              </div>
+            </div>
+            <!-- Checkout form backup for later (shipping + payment fields):
             <div class="eyebrow" style="margin-bottom:18px">Shipping</div>
             <div class="checkout-fields">
               <input id="co-first" placeholder="First name" class="field">
@@ -466,6 +480,7 @@
               <input placeholder="MM / YY" class="field">
               <input placeholder="CVC" class="field">
             </div>
+            -->
           </div>
           <div class="order-summary">
             <div class="summary-title">Order summary</div>
@@ -473,10 +488,10 @@
             <div class="summary-row"><span>Delivery</span><span>White-glove &middot; Free</span></div>
             <div class="summary-total-row">
               <span class="summary-total-label">Total</span>
-              <span class="summary-total-amt" id="summary-total">£0</span>
+              <span class="summary-total-amt" id="summary-total">₹0</span>
             </div>
-            <button class="btn-primary" id="place-order-btn" style="width:100%;margin-top:22px">Place order</button>
-            <p style="margin:14px 0 0;text-align:center;font-size:12px;color:rgba(27,37,56,.5)">Secure checkout &middot; no charge in this demo</p>
+            <button class="btn-primary" id="place-order-btn" style="width:100%;margin-top:22px">Call to buy</button>
+            <p style="margin:14px 0 0;text-align:center;font-size:12px;color:rgba(27,37,56,.5)">Contact +91 98183 81951 to confirm your order.</p>
           </div>
         </div>
       </div>
@@ -485,6 +500,14 @@
 
 </main>
 
-<script src="app.js?v=13"></script>
+<!-- ======= 3D MODEL VIEWER MODAL ======= -->
+<div id="model-modal" style="display:none;position:fixed;inset:0;z-index:1200;background:rgba(27,37,56,.94);align-items:center;justify-content:center">
+  <model-viewer id="model-viewer" camera-controls auto-rotate ar shadow-intensity="1"
+    style="width:min(92vw,920px);height:min(82vh,720px);background:#F3F0E4;border-radius:10px"></model-viewer>
+  <button id="model-close" aria-label="Close 3D view"
+    style="position:absolute;top:22px;right:26px;background:none;border:none;color:#FCFBF1;font-size:34px;cursor:pointer;line-height:1">&times;</button>
+</div>
+
+<script src="app.js?v=16"></script>
 </body>
 </html>
