@@ -149,6 +149,19 @@ function showToast(msg) {
 }
 
 /* ---- ROUTING ---- */
+// Pages with a clean, shareable URL. Reverse of DEEP_LINKS below.
+function pathForPage(page) {
+  if (page === 'shop') return '/shop';
+  if (page === 'checkout') return '/checkout';
+  if (page === 'home') return '/';
+  if (page === 'store') {
+    const cats = activeFilters.category;
+    if (cats && cats.length === 1 && cats[0] === 'Tables') return '/tables';
+    if (cats && cats.length === 1 && cats[0] === 'Chairs') return '/chairs';
+  }
+  return null;
+}
+
 function navigate(page, opts = {}) {
   if (page === currentPage && !opts.force) return;
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -157,6 +170,11 @@ function navigate(page, opts = {}) {
   el.classList.add('active');
   currentPage = page;
   window.scrollTo(0, 0);
+
+  if (!opts.skipHistory) {
+    const path = pathForPage(page);
+    if (path && path !== location.pathname) history.pushState({ page }, '', path);
+  }
 
   // update nav visibility
   const marketingPages = ['home','studio','about'];
@@ -187,6 +205,30 @@ function scrollToEl(el) {
   if (!el) return;
   el.scrollIntoView({ behavior: 'smooth' });
 }
+
+// Deep links: /shop, /tables, /chairs, /checkout (and legacy .html variants)
+// map straight onto an SPA page + filter state.
+const DEEP_LINKS = {
+  '/shop': { page: 'shop' },
+  '/tables': { page: 'store', filters: { category: ['Tables'] } },
+  '/chairs': { page: 'store', filters: { category: ['Chairs'] } },
+  '/checkout': { page: 'checkout' },
+};
+
+function resolvePath(pathname) {
+  const path = pathname.replace(/\/+$/, '').replace(/\.html$/, '') || '/';
+  return DEEP_LINKS[path] || null;
+}
+
+window.addEventListener('popstate', () => {
+  const deepLink = resolvePath(location.pathname);
+  if (deepLink) {
+    if (deepLink.filters) activeFilters = deepLink.filters;
+    navigate(deepLink.page, { force: true, skipHistory: true });
+  } else {
+    navigate('home', { force: true, skipHistory: true });
+  }
+});
 
 /* ---- GLOBAL CLICK DELEGATION ---- */
 document.addEventListener('click', (e) => {
@@ -1052,20 +1094,12 @@ async function init() {
   document.getElementById('model-modal')?.addEventListener('click', (e) => { if (e.target.id === 'model-modal') closeModel(); });
 
   // Deep links: /shop, /tables, /chairs, /checkout land straight on the matching SPA page.
-  // Legacy .html paths (old bookmarks/links) route the same way.
-  const path = location.pathname.replace(/\/+$/, '').replace(/\.html$/, '') || '/';
-  const DEEP_LINKS = {
-    '/shop': { page: 'shop' },
-    '/tables': { page: 'store', filters: { category: ['Tables'] } },
-    '/chairs': { page: 'store', filters: { category: ['Chairs'] } },
-    '/checkout': { page: 'checkout' },
-  };
-  const deepLink = DEEP_LINKS[path];
+  const deepLink = resolvePath(location.pathname);
 
   if (deepLink) {
     if (deepLink.filters) activeFilters = deepLink.filters;
     document.getElementById('splash')?.remove();
-    navigate(deepLink.page, { force: true });
+    navigate(deepLink.page, { force: true, skipHistory: true });
   } else {
     navigate('home', { force: true });
   }
