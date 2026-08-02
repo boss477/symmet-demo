@@ -153,6 +153,8 @@ function showToast(msg) {
 function pathForPage(page) {
   if (page === 'shop') return '/shop';
   if (page === 'checkout') return '/checkout';
+  if (page === 'studio') return '/studio';
+  if (page === 'about') return '/about';
   if (page === 'home') return '/';
   if (page === 'store') {
     const cats = activeFilters.category;
@@ -213,6 +215,8 @@ const DEEP_LINKS = {
   '/tables': { page: 'store', filters: { category: ['Tables'] } },
   '/chairs': { page: 'store', filters: { category: ['Chairs'] } },
   '/checkout': { page: 'checkout' },
+  '/studio': { page: 'studio' },
+  '/about': { page: 'about' },
 };
 
 function resolvePath(pathname) {
