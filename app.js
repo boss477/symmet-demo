@@ -485,9 +485,10 @@ function renderCategories() {
   const cards = [...CATEGORIES, NEW_SOFA_CARD];
   grid.innerHTML = cards.map(c => `
       <div class="category-card reveal" ${c.group ? `data-group="${c.group}"` : `data-cat="${c.name}"`}>
-      <img src="${CATEGORY_CARD_IMAGES[c.name] || c.img || 'assets/mark_slate.png'}" alt="${c.name}" class="category-card-bg is-photo">
-      <div style="flex:1"></div>
-      <div style="position:relative">
+      <div class="category-media">
+        <img src="${CATEGORY_CARD_IMAGES[c.name] || c.img || 'assets/mark_slate.png'}" alt="${c.name}" class="category-card-bg is-photo">
+      </div>
+      <div class="category-copy">
         <h3 class="category-name">${c.name}</h3>
         <span class="category-cta">Shop ${c.name} <span style="font-size:16px">&rarr;</span></span>
       </div>
@@ -1011,6 +1012,14 @@ function initShopCarousel() {
   function stopAutoplay() {
     if (timer) clearInterval(timer);
   }
+
+  items.forEach((item, i) => {
+    item.addEventListener('click', () => {
+      const id = item.dataset.product;
+      const product = findProductById(id);
+      if (product) navigate('product', { product });
+    });
+  });
 
   dots.forEach(dot => {
     dot.addEventListener('click', () => {
