@@ -79,7 +79,9 @@ function prettyCategory(category) {
     .join(' ');
 }
 
-function prettyName(category, s_no) {
+function prettyName(category, s_no, product_code) {
+  const premium = PRODUCT_NAMES && PRODUCT_NAMES[product_code];
+  if (premium) return premium;
   return `${prettyCategory(category)} No. ${s_no}`;
 }
 
@@ -91,7 +93,7 @@ async function loadProducts() {
     // they render as "Price on request" (see priceLabel)
     PRODUCTS = rows.map(r => ({
       id: r.product_code,
-      name: prettyName(r.category, r.s_no),
+      name: prettyName(r.category, r.s_no, r.product_code),
       price: r.min_price,
       maxPrice: r.max_price ?? r.min_price,
       category: r.category,
