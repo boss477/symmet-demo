@@ -1051,8 +1051,23 @@ async function init() {
   document.getElementById('model-close')?.addEventListener('click', closeModel);
   document.getElementById('model-modal')?.addEventListener('click', (e) => { if (e.target.id === 'model-modal') closeModel(); });
 
-  // Initial page
-  navigate('home', { force: true });
+  // Deep links: /shop, /tables, /chairs, /checkout land straight on the matching SPA page.
+  const path = location.pathname.replace(/\/+$/, '') || '/';
+  const DEEP_LINKS = {
+    '/shop': { page: 'shop' },
+    '/tables': { page: 'store', filters: { category: ['Tables'] } },
+    '/chairs': { page: 'store', filters: { category: ['Chairs'] } },
+    '/checkout': { page: 'checkout' },
+  };
+  const deepLink = DEEP_LINKS[path];
+
+  if (deepLink) {
+    if (deepLink.filters) activeFilters = deepLink.filters;
+    document.getElementById('splash')?.remove();
+    navigate(deepLink.page, { force: true });
+  } else {
+    navigate('home', { force: true });
+  }
   setTimeout(initReveal, 600);
 
   await loadProducts();
