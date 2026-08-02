@@ -1052,7 +1052,8 @@ async function init() {
   document.getElementById('model-modal')?.addEventListener('click', (e) => { if (e.target.id === 'model-modal') closeModel(); });
 
   // Deep links: /shop, /tables, /chairs, /checkout land straight on the matching SPA page.
-  const path = location.pathname.replace(/\/+$/, '') || '/';
+  // Legacy .html paths (old bookmarks/links) route the same way.
+  const path = location.pathname.replace(/\/+$/, '').replace(/\.html$/, '') || '/';
   const DEEP_LINKS = {
     '/shop': { page: 'shop' },
     '/tables': { page: 'store', filters: { category: ['Tables'] } },
