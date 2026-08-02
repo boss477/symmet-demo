@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tables - Symmet Shop</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f8f8f6;
+      color: #1a1a1a;
+    }
+    header {
+      background: white;
+      padding: 24px 40px;
+      border-bottom: 1px solid #e8e8e6;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 {
+      font-size: 28px;
+      font-weight: 700;
+    }
+    nav a {
+      color: #1a1a1a;
+      text-decoration: none;
+      margin: 0 16px;
+      font-weight: 500;
+    }
+    nav a:hover { color: #4a6fa5; }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px;
+    }
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
+      margin-top: 32px;
+    }
+    .product-card {
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #e8e8e6;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .product-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      transform: translateY(-2px);
+    }
+    .product-image {
+      width: 100%;
+      aspect-ratio: 1;
+      background: #f0f0ee;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+    }
+    .product-info {
+      padding: 16px;
+    }
+    .product-code {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 4px;
+    }
+    .product-name {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+    .product-price {
+      font-size: 18px;
+      font-weight: 700;
+      color: #4a6fa5;
+    }
+    .add-btn {
+      width: 100%;
+      margin-top: 12px;
+      padding: 8px 16px;
+      background: #4a6fa5;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .add-btn:hover {
+      background: #3a5a95;
+    }
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Tables</h1>
+    <nav>
+      <a href="shop.html">Shop</a>
+      <a href="chairs.html">Chairs</a>
+      <a href="checkout.html">Checkout</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <p style="margin-bottom: 32px; color: #666; font-size: 16px;">Premium tables for every space</p>
+    <div class="product-grid" id="products">
+      <div class="loading">Loading tables...</div>
+    </div>
+  </div>
+
+  <script>
+    const API = 'https://symmet-shop-api.iidaworkzz.workers.dev';
+    const categories = ['COFFEE Table', 'MEETING Table', 'LAPTOP TABLE', 'BAR TABLE'];
+
+    async function loadTables() {
+      try {
+        // Fetch all table categories
+        const promises = categories.map(cat =>
+          fetch(`${API}/api/products?category=${encodeURIComponent(cat)}`).then(r => r.json())
+        );
+        const results = await Promise.all(promises);
+        const products = results.flat();
+        displayProducts(products);
+      } catch (e) {
+        console.error('Failed to load tables:', e);
+        document.getElementById('products').innerHTML = '<div class="loading">Failed to load tables</div>';
+      }
+    }
+
+    function displayProducts(products) {
+      const grid = document.getElementById('products');
+      if (!products.length) {
+        grid.innerHTML = '<div class="loading">No tables found</div>';
+        return;
+      }
+      grid.innerHTML = products.map(p => `
+        <div class="product-card">
+          <div class="product-image">🪑</div>
+          <div class="product-info">
+            <div class="product-code">${p.product_code}</div>
+            <div class="product-name">${p.product_code}</div>
+            <div class="product-price">$${p.min_price ? p.min_price.toLocaleString() : 'Contact'}</div>
+            <button class="add-btn" onclick="addToCart('${p.product_code}')">Add to Cart</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function addToCart(productCode) {
+      // Store in localStorage for now
+      let cart = JSON.parse(localStorage.getItem('symmet-cart') || '[]');
+      cart.push(productCode);
+      localStorage.setItem('symmet-cart', JSON.stringify(cart));
+      alert('Added to cart!');
+    }
+
+    loadTables();
+  </script>
+</body>
+</html>
