@@ -472,21 +472,23 @@ function renderShop() {
   document.getElementById('view-all-link')?.addEventListener('click', (e) => { e.preventDefault(); navigate('store'); });
 }
 
+const CATEGORY_CARD_IMAGES = {
+  Chairs: 'https://gqgfttnmnnhglbdaydny.supabase.co/storage/v1/object/public/shops-images/SMKAP_WC_014.png',
+  Tables: 'https://gqgfttnmnnhglbdaydny.supabase.co/storage/v1/object/public/shops-images/SMKAP_CT_030.png',
+  Sofas: 'https://gqgfttnmnnhglbdaydny.supabase.co/storage/v1/object/public/shops-images/SMKAP_S_001.png',
+  'New Sofa': 'https://pub-c653cd87442949f8b7fe6e8eb0db85ef.r2.dev/ANDY.webp',
+};
+
 function renderCategories() {
   const grid = document.getElementById('categories-grid');
   if (!grid) return;
   const cards = [...CATEGORIES, NEW_SOFA_CARD];
   grid.innerHTML = cards.map(c => `
       <div class="category-card reveal" ${c.group ? `data-group="${c.group}"` : `data-cat="${c.name}"`}>
-      <img src="${c.img || 'assets/mark_slate.png'}" alt="" class="category-card-bg${c.img ? ' is-photo' : ''}">
-      <div style="position:relative;display:flex;justify-content:space-between;align-items:flex-start">
-        <span class="category-tag">${c.tag}</span>
-        <span class="category-count">${c.count} pieces</span>
-      </div>
+      <img src="${CATEGORY_CARD_IMAGES[c.name] || c.img || 'assets/mark_slate.png'}" alt="${c.name}" class="category-card-bg is-photo">
       <div style="flex:1"></div>
       <div style="position:relative">
         <h3 class="category-name">${c.name}</h3>
-        <p class="category-blurb">${c.blurb}</p>
         <span class="category-cta">Shop ${c.name} <span style="font-size:16px">&rarr;</span></span>
       </div>
     </div>
@@ -507,7 +509,7 @@ function renderCategories() {
 
 /* Quietly popular — curated picks by display name: Lounge Seating No. 47, 48, 33, 9, 6
    (s_no -> code: 47->LS033, 48->LS034, 33->LS028, 9->LS009, 6->LS006) */
-const FEATURED_CODES = ['SMKAP LS 033', 'SMKAP LS 034', 'SMKAP LS 028', 'SMKAP LS 009', 'SMKAP LS 006'];
+const FEATURED_CODES = ['SMKAP LS 033', 'SMKAP LS 034', 'SMKAP LS 009', 'SMKAP LS 006'];
 
 function renderFeatured() {
   const grid = document.getElementById('featured-grid');
