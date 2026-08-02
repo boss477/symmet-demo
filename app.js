@@ -511,18 +511,15 @@ function renderShop() {
   document.getElementById('view-all-link')?.addEventListener('click', (e) => { e.preventDefault(); navigate('store'); });
 }
 
-// Real categories + a representative image, derived live from PRODUCTS
-// (in the order the API returns them) instead of a hand-picked, stale list.
+// 4 top-level cards (Chairs/Tables/Sofas/New Sofa). Each gets a live
+// representative image from the first matching in-stock product.
+const SHOP_GROUPS = ['Chairs', 'Tables', 'Sofas'];
+
 function liveCategoryCards() {
-  const seen = new Map();
-  PRODUCTS.forEach(p => {
-    if (!seen.has(p.category)) seen.set(p.category, p.image);
+  return SHOP_GROUPS.map(name => {
+    const match = PRODUCTS.find(p => matchesCategory(p.category, name));
+    return { name, cat: name, img: match ? match.image : 'assets/mark_slate.png' };
   });
-  return [...seen.entries()].map(([category, img]) => ({
-    name: prettyCategory(category),
-    cat: category,
-    img: img || 'assets/mark_slate.png',
-  }));
 }
 
 function renderCategories() {
@@ -619,7 +616,10 @@ function renderFilterBar() {
   if (!bar) return;
   // showcase groups (New Sofa) have no DB categories to chip-filter on
   if (activeFilters.group) { bar.innerHTML = ''; return; }
-  const categories = [...new Set(PRODUCTS.map(p => p.category))];
+  // Only offer sub-categories belonging to the active top-level group (if any).
+  const activeGroup = activeFilters.category?.find(f => SHOP_GROUPS.includes(f));
+  const pool = activeGroup ? PRODUCTS.filter(p => matchesCategory(p.category, activeGroup)) : PRODUCTS;
+  const categories = [...new Set(pool.map(p => p.category))];
 
   const groups = [
     { label: 'Category', key: 'category', options: categories },
