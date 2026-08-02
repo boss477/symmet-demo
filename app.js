@@ -20,13 +20,6 @@ const STEPS = [
   { n: '04', title: 'Add to cart',       body: 'When it feels right, add the pieces you love directly to cart.',  cap: 'Step 04', line: 'When everything belongs, add your chosen pieces straight to cart.' },
 ];
 
-const CATEGORIES = [
-  { tag: 'SEATING',   name: 'Chairs',  count: 14, blurb: 'From sculptural dining chairs to low loungers built for the long sit.' },
-  { tag: 'SURFACES',  name: 'Tables',  count: 11, blurb: 'Dining tables, coffee tables, and side tables in travertine and oak.' },
-  { tag: 'SEATING',   name: 'Sofas',   count: 33, blurb: 'Deep, low-slung sofas and café seating built for long, unhurried evenings.',
-    img: 'https://gqgfttnmnnhglbdaydny.supabase.co/storage/v1/object/public/shops-images/SMKAP_CS_001.png' },
-];
-
 /* ---- NEW SOFA (showcase group: no prices, 3D models from R2 sofa-3d) ---- */
 const NEW_SOFA_CARD = { tag: 'NEW', name: 'New Sofa', count: 10, group: 'new-sofa',
   img: 'https://pub-c653cd87442949f8b7fe6e8eb0db85ef.r2.dev/ANDY.webp',
@@ -518,21 +511,28 @@ function renderShop() {
   document.getElementById('view-all-link')?.addEventListener('click', (e) => { e.preventDefault(); navigate('store'); });
 }
 
-const CATEGORY_CARD_IMAGES = {
-  Chairs: 'https://gqgfttnmnnhglbdaydny.supabase.co/storage/v1/object/public/shops-images/SMKAP_WC_014.png',
-  Tables: 'https://gqgfttnmnnhglbdaydny.supabase.co/storage/v1/object/public/shops-images/SMKAP_CT_030.png',
-  Sofas: 'https://gqgfttnmnnhglbdaydny.supabase.co/storage/v1/object/public/shops-images/SMKAP_S_001.png',
-  'New Sofa': 'https://pub-c653cd87442949f8b7fe6e8eb0db85ef.r2.dev/ANDY.webp',
-};
+// Real categories + a representative image, derived live from PRODUCTS
+// (in the order the API returns them) instead of a hand-picked, stale list.
+function liveCategoryCards() {
+  const seen = new Map();
+  PRODUCTS.forEach(p => {
+    if (!seen.has(p.category)) seen.set(p.category, p.image);
+  });
+  return [...seen.entries()].map(([category, img]) => ({
+    name: prettyCategory(category),
+    cat: category,
+    img: img || 'assets/mark_slate.png',
+  }));
+}
 
 function renderCategories() {
   const grid = document.getElementById('categories-grid');
   if (!grid) return;
-  const cards = [...CATEGORIES, NEW_SOFA_CARD];
+  const cards = [...liveCategoryCards(), NEW_SOFA_CARD];
   grid.innerHTML = cards.map(c => `
-      <div class="category-card reveal" ${c.group ? `data-group="${c.group}"` : `data-cat="${c.name}"`}>
+      <div class="category-card reveal" ${c.group ? `data-group="${c.group}"` : `data-cat="${c.cat}"`}>
       <div class="category-media">
-        <img src="${CATEGORY_CARD_IMAGES[c.name] || c.img || 'assets/mark_slate.png'}" alt="${c.name}" class="category-card-bg is-photo">
+        <img src="${c.img}" alt="${c.name}" class="category-card-bg is-photo">
       </div>
       <div class="category-copy">
         <h3 class="category-name">${c.name}</h3>
@@ -1112,6 +1112,7 @@ async function init() {
   await loadProducts();
   renderFeatured();
   if (currentPage === 'store') renderStore();
+  if (currentPage === 'shop') renderCategories();
 }
 
 document.addEventListener('DOMContentLoaded', init);
