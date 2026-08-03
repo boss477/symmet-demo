@@ -7,10 +7,13 @@
 /* ---- DATA ---- */
 
 const ASSURANCES = [
-  { title: 'White-glove delivery',  body: 'Every order is delivered and placed by our team, at no extra cost.' },
-  { title: 'Lifetime warranty',     body: 'Every piece is guaranteed against defect for as long as you own it.' },
-  { title: 'FSC-certified timber',  body: 'All wood is sourced from responsibly managed forests.' },
-  { title: 'Carbon-neutral orders', body: 'We offset the delivery footprint of every shipment, always.' },
+  { title: 'Three-stage quality checks', body: 'Every material is inspected at the supplier\'s facility, on arrival, and again before production.' },
+  { title: 'Precision-engineered joinery', body: 'Frames are CNC-machined, laser-cut, and robot-welded — never nailed or hammered together.' },
+  { title: 'Commercial-grade steel frames', body: 'Structures use branded MS tubes, with SS 304 stainless steel wherever corrosion resistance is needed.' },
+  { title: 'High-density PU foam', body: 'Seating uses high-density moulded foam, cut and stitched on computerised machines.' },
+  { title: 'Corrosion-resistant finish', body: 'Every surface is powder-coated and tested for scratch resistance before dispatch.' },
+  { title: 'Full product testing', body: 'Each piece is tested for load-bearing capacity, weld integrity, and dimensional accuracy.' },
+  { title: 'Seasoned, moisture-tested hardwood', body: 'Hardwood is seasoned and checked for moisture and strength before entering production.' },
 ];
 
 const STEPS = [
@@ -590,7 +593,7 @@ function renderStore() {
 const CATEGORY_KEYWORDS = {
   Chairs: ['chair'],
   Tables: ['table'],
-  Sofas:  ['sofa'],
+  Sofas:  ['sofa', 'lounge seating', 'puffee', 'booth seating'],
 };
 
 function normCategory(s) {
@@ -864,8 +867,18 @@ async function renderProduct(product) {
 
   const img = document.getElementById('pdp-image');
   const shotLabel = document.getElementById('pdp-shot-label');
-  if (product.image) {
-    img.src = product.image;
+
+  // Image replacement mapping for lounge seating products
+  const imageMap = {
+    'SMKAP LS 033': 'assets/lounge-granite.png',
+    'SMKAP LS 024': 'assets/lounge-xanadu.png',
+    'SMKAP LS 035': 'assets/lounge-indigo.png',
+    'SMKAP LS 038': 'assets/lounge-lorien.png',
+  };
+
+  let imageUrl = imageMap[product.id] || product.image;
+  if (imageUrl) {
+    img.src = imageUrl;
     img.onerror = () => { img.src = 'assets/mark_slate.png'; shotLabel.style.display = ''; };
     shotLabel.style.display = 'none';
   }
