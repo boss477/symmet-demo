@@ -66,7 +66,7 @@ const NEW_SOFA_PRODUCTS = NEW_SOFA.map(m => ({
   dimsHTML: sofaDimsHTML(m),
 }));
 
-const SHOP_API_BASE = 'https://symmet-shop-api.iidaworkzz.workers.dev';
+const SHOP_API_BASE = 'https://symmet.in';
 // R2 bucket "sofa-3d" — public dev URL. GLB keys are expected to be named
 // like the product images: product code with underscores (e.g. SMKAP_CS_001.glb).
 const MODEL_BASE = 'https://pub-cdfdd6db8e374af085a2724000f8977c.r2.dev';
@@ -118,8 +118,8 @@ async function loadProductDetail(code) {
 const SPECS = [
   { label: 'Dimensions', body: 'W 82 × D 76 × H 70 cm. Seat height: 38 cm. Weight: 14 kg.' },
   { label: 'Materials',  body: 'Frame in solid European oak, hand-finished with natural oil. Upholstery in undyed bouclé from a small Portuguese mill. All fixings are stainless steel.' },
-  { label: 'Delivery',   body: 'White-glove delivery included. Our team delivers and places the piece in your home, removing all packaging. Lead time: 3-4 weeks from order.' },
-  { label: 'Warranty',   body: 'Lifetime guarantee against manufacturing defect. Covers the frame and joinery; natural wear to upholstery and wood is not a defect — it\'s character.' },
+  { label: 'Delivery',   body: 'White-glove delivery included. Our team delivers and places the piece in your home, removing all packaging. Lead time: 4-5 weeks from order.' },
+  { label: 'Warranty',   body: '5 years on metal bases. 2 years on wood bases. 1 year on manufacturing defects. Covers structural integrity and joinery; natural aging and patina development is not a defect — it\'s character.' },
 ];
 
 /* ---- STATE ---- */
@@ -171,7 +171,7 @@ function navigate(page, opts = {}) {
   currentPage = page;
   window.scrollTo(0, 0);
 
-  if (!opts.skipHistory) {
+  if (!opts.skipHistory && location.protocol !== 'file:') {
     const path = pathForPage(page);
     if (path && path !== location.pathname) history.pushState({ page }, '', path);
   }
@@ -557,8 +557,8 @@ function renderCategories() {
 }
 
 /* Quietly popular — curated picks by display name: Lounge Seating No. 47, 48, 33, 9, 6
-   (s_no -> code: 47->LS033, 48->LS034, 33->LS028, 9->LS009, 6->LS006) */
-const FEATURED_CODES = ['SMKAP LS 033', 'SMKAP LS 034', 'SMKAP LS 009', 'SMKAP LS 006'];
+  (s_no -> code: 47->LS033, 48->LS034, 33->LS028, 9->LS009, 6->LS006) */
+const FEATURED_CODES = ['SMKAP LS 034', 'SMKAP LS 009', 'SMKAP LS 006'];
 
 function renderFeatured() {
   const grid = document.getElementById('featured-grid');
@@ -614,6 +614,17 @@ function getFilteredProducts() {
         && !activeFilters.category.some(f => matchesCategory(p.category, f))) return false;
     return true;
   });
+}
+
+const PRODUCT_IMAGE_OVERRIDES = {
+  'SMKAP LS 033': 'assets/lounge-granite.png',
+  'SMKAP LS 024': 'assets/lounge-xanadu.png',
+  'SMKAP LS 035': 'assets/lounge-indigo.png',
+  'SMKAP LS 038': 'assets/lounge-lorien.png',
+};
+
+function productImageUrl(product) {
+  return PRODUCT_IMAGE_OVERRIDES[product.id] || product.image;
 }
 
 function renderFilterBar() {
@@ -718,10 +729,11 @@ function renderStoreGrid() {
 }
 
 function productCardHTML(p) {
+  const imageUrl = productImageUrl(p);
   return `
     <div class="product-card reveal" data-product-id="${p.id}">
       <div class="product-card-img">
-        <img src="${p.image}" alt="${p.name}" loading="lazy" onerror="this.onerror=null;this.src='assets/mark_slate.png';">
+        <img src="${imageUrl}" alt="${p.name}" loading="lazy" onerror="this.onerror=null;this.src='assets/mark_slate.png';">
         <span class="product-cat-label">${prettyCategory(p.category)}</span>
         ${p.noPrice ? '' : `<button class="quick-add" data-product-id="${p.id}" aria-label="Quick add">+</button>`}
       </div>
@@ -868,15 +880,7 @@ async function renderProduct(product) {
   const img = document.getElementById('pdp-image');
   const shotLabel = document.getElementById('pdp-shot-label');
 
-  // Image replacement mapping for lounge seating products
-  const imageMap = {
-    'SMKAP LS 033': 'assets/lounge-granite.png',
-    'SMKAP LS 024': 'assets/lounge-xanadu.png',
-    'SMKAP LS 035': 'assets/lounge-indigo.png',
-    'SMKAP LS 038': 'assets/lounge-lorien.png',
-  };
-
-  let imageUrl = imageMap[product.id] || product.image;
+  let imageUrl = productImageUrl(product);
   if (imageUrl) {
     img.src = imageUrl;
     img.onerror = () => { img.src = 'assets/mark_slate.png'; shotLabel.style.display = ''; };
@@ -911,6 +915,11 @@ async function renderProduct(product) {
       <p class="spec-body" id="spec-body-${i}" style="display:none">${s.body}</p>
     </div>
   `).join('');
+
+  if (detail && detail.warranty_text) {
+    const warrantyBody = document.getElementById('spec-body-3');
+    if (warrantyBody) warrantyBody.textContent = detail.warranty_text;
+  }
 
   acc.querySelectorAll('.spec-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -963,7 +972,20 @@ async function renderProduct(product) {
   const related = PRODUCTS.filter(p => p.id !== product.id).sort(() => Math.random() - .5).slice(0, 3);
   const relGrid = document.getElementById('related-grid');
   relGrid.innerHTML = related.map(p => productCardHTML(p)).join('');
-  attachProductCardEvents(relGrid);
+
+  relGrid.querySelectorAll('.product-card').forEach(card => {
+    card.style.cursor = 'pointer';
+  });
+
+  relGrid.addEventListener('click', (e) => {
+    const card = e.target.closest('.product-card');
+    if (!card) return;
+    if (e.target.closest('.quick-add')) return;
+    const id = card.getAttribute('data-product-id');
+    const prod = findProductById(id);
+    if (prod) navigate('product', { product: prod });
+  });
+
   initReveal();
 }
 

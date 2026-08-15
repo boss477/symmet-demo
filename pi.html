@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shearling / Symmet — Proforma Invoice (PI) Generator</title>
+  <meta name="description" content="Generate official system-generated Proforma Invoices with live calculations for Freight, Packaging, and Installation.">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Forum&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=25">
+  
+  <!-- jsPDF and AutoTable for client-side PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #FCFBF1;
+      --surface: #F3F0E4;
+      --card-bg: #FFFFFF;
+      --ink: #1B2538;
+      --ink-muted: rgba(27, 37, 56, 0.6);
+      --ink-faint: rgba(27, 37, 56, 0.15);
+      --border: #E4DDCF;
+      --accent: #B7533E;
+      --accent-hover: #9E3F2C;
+      --shearling-red: #C53030;
+      --shadow-sm: 0 2px 8px rgba(27, 37, 56, 0.04);
+      --shadow-md: 0 8px 24px rgba(27, 37, 56, 0.08);
+      --shadow-lg: 0 16px 40px rgba(27, 37, 56, 0.12);
+      --radius: 8px;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--ink);
+      font-family: 'Space Grotesk', -apple-system, sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+
+    .pi-header {
+      border-bottom: 1px solid var(--border);
+      background: rgba(252, 251, 241, 0.9);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 16px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .pi-brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      text-decoration: none;
+      color: var(--ink);
+    }
+
+    .pi-brand-logo {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--shearling-red);
+    }
+
+    .pi-brand-badge {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 4px 10px;
+      border-radius: 20px;
+      color: var(--ink-muted);
+    }
+
+    .pi-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-secondary {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--ink);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover {
+      background: #EAE5D7;
+      border-color: #D3C9B6;
+    }
+
+    .btn-primary {
+      background: var(--ink);
+      color: var(--bg);
+      border: none;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 22px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(27, 37, 56, 0.15);
+    }
+    .btn-primary:hover {
+      background: #2D3E5E;
+      transform: translateY(-1px);
+    }
+
+    .pi-workspace {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 28px;
+      display: grid;
+      grid-template-columns: 440px 1fr;
+      gap: 32px;
+      align-items: start;
+    }
+
+    @media (max-width: 1100px) {
+      .pi-workspace {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Left Control Panel */
+    .control-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .panel-section {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 20px;
+    }
+    .panel-section:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .section-heading {
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--ink);
+      margin: 0 0 14px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-muted);
+      margin-bottom: 6px;
+    }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      box-sizing: border-box;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 9px 12px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 13px;
+      color: var(--ink);
+      transition: border-color 0.2s;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--ink);
+      background: #FFF;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    /* Calculation Condition Pill Selector */
+    .rule-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .rule-title {
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--ink);
+      display: flex;
+      justify-content: space-between;
+    }
+    .rule-options {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .rule-option-btn {
+      flex: 1;
+      padding: 6px 4px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--ink);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .rule-option-btn.active {
+      background: var(--ink);
+      color: #FFF;
+      border-color: var(--ink);
+    }
+
+    /* Item builder in panel */
+    .item-card-mini {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 10px;
+      display: flex;
+      gap: 10px;
+      position: relative;
+    }
+    .item-thumb-mini {
+      width: 48px;
+      height: 48px;
+      border-radius: 4px;
+      object-fit: cover;
+      background: #FFF;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .item-meta-mini {
+      flex: 1;
+      font-size: 12px;
+    }
+    .item-title-mini {
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .item-sub-mini {
+      font-size: 11px;
+      color: var(--ink-muted);
+      margin: 2px 0;
+    }
+    .btn-del-item {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: none;
+      border: none;
+      color: var(--accent);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 2px 6px;
+    }
+
+    /* Right Preview Document (Exact Sheet look) */
+    .document-preview-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .document-sheet {
+      background: #FFFFFF;
+      border: 1px solid #1B2538;
+      box-shadow: var(--shadow-md);
+      padding: 18px;
+      font-size: 11px;
+      color: #111;
+      line-height: 1.35;
+      position: relative;
+    }
+
+    /* Sheet Tables & Structure */
+    .pi-tbl-header {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid #222;
+      margin-bottom: 0;
+    }
+    .pi-tbl-header td {
+      border: 1px solid #222;
+      padding: 6px 8px;
+      vertical-align: middle;
+    }
+
+    .doc-logo-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--shearling-red);
+      line-height: 1.1;
+    }
+    .doc-logo-sub {
+      font-size: 9px;
+      color: #666;
+    }
+
+    .doc-main-title {
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .doc-company-name {
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .doc-company-sub {
+      font-size: 9px;
+      color: #444;
+    }
+
+    .pi-tbl-customer {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid #222;
+      border-top: none;
+    }
+    .pi-tbl-customer td {
+      border: 1px solid #222;
+      padding: 6px 8px;
+      vertical-align: top;
+      font-size: 10px;
+    }
+
+    /* Line Items Table */
+    .pi-tbl-items {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid #222;
+      border-top: none;
+      font-size: 9.5px;
+      text-align: center;
+    }
+    .pi-tbl-items th {
+      background: #F2F2F2;
+      border: 1px solid #222;
+      padding: 6px 4px;
+      font-weight: 700;
+      font-size: 9px;
+    }
+    .pi-tbl-items td {
+      border: 1px solid #222;
+      padding: 6px 4px;
+      vertical-align: middle;
+    }
+    .pi-tbl-items td.al-left { text-align: left; }
+    .pi-tbl-items td.al-right { text-align: right; }
+
+    .item-img-preview {
+      width: 44px;
+      height: 44px;
+      object-fit: contain;
+      background: #FFF;
+      display: block;
+      margin: 0 auto;
+    }
+
+    /* Bottom Summary & Bank Details */
+    .pi-tbl-bottom {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid #222;
+      border-top: none;
+    }
+    .pi-tbl-bottom td {
+      border: 1px solid #222;
+      padding: 6px 8px;
+      vertical-align: top;
+    }
+
+    .bank-box {
+      font-size: 9px;
+      line-height: 1.5;
+    }
+    .bank-title {
+      font-weight: 800;
+      font-size: 10px;
+      margin-bottom: 4px;
+      text-decoration: underline;
+    }
+
+    .terms-box {
+      margin-top: 10px;
+      font-size: 8px;
+      line-height: 1.4;
+    }
+    .terms-title {
+      font-weight: 800;
+      font-size: 9px;
+      margin-bottom: 4px;
+    }
+    .terms-list {
+      margin: 0;
+      padding-left: 14px;
+    }
+
+    .summary-calc-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10px;
+    }
+    .summary-calc-table td {
+      border: none !important;
+      padding: 4px 0 !important;
+    }
+    .summary-calc-table tr.border-top td {
+      border-top: 1px solid #222 !important;
+      padding-top: 6px !important;
+    }
+    .summary-calc-table tr.total-row td {
+      font-weight: 800;
+      font-size: 11px;
+    }
+
+    .highlight-pill {
+      display: inline-block;
+      padding: 2px 6px;
+      background: #EBF8FF;
+      color: #2B6CB0;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 9px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="pi-header">
+    <a href="index.html" class="pi-brand">
+      <span class="pi-brand-logo">Shearling</span>
+      <span class="pi-brand-badge">Proforma Invoice Studio</span>
+    </a>
+    <div class="pi-header-actions">
+      <button class="btn-secondary" id="btn-add-sample">Load Sample (Kira Chair)</button>
+      <button class="btn-secondary" onclick="window.print()">Print</button>
+      <button class="btn-primary" id="btn-export-pdf">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download Official PI (PDF)
+      </button>
+    </div>
+  </header>
+
+  <main class="pi-workspace">
+
+    <!-- LEFT CONTROL PANEL -->
+    <aside class="control-panel">
+      
+      <!-- Customer Information -->
+      <section class="panel-section">
+        <div class="section-heading">1. Customer Details</div>
+        <div class="form-group">
+          <label class="form-label">Customer Company / Client Name</label>
+          <input type="text" id="cust-name" class="form-input" value="WORLD MARK">
+        </div>
+        <div class="grid-2 form-group">
+          <div>
+            <label class="form-label">Contact Person</label>
+            <input type="text" id="cust-person" class="form-input" value="RAJAT JAIN">
+          </div>
+          <div>
+            <label class="form-label">Mobile Number</label>
+            <input type="text" id="cust-mobile" class="form-input" value="+91 9718362637">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Delivery & Billing Address</label>
+          <textarea id="cust-address" class="form-textarea" rows="2">AEROCITY, INDIRA GANDHI INTERNATIONAL AIRPORT, NEW DELHI DELHI 110037</textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="text" id="cust-email" class="form-input" value="rajat@worldmark.in">
+        </div>
+      </section>
+
+      <!-- Invoice Metadata -->
+      <section class="panel-section">
+        <div class="section-heading">2. Invoice Details</div>
+        <div class="grid-2 form-group">
+          <div>
+            <label class="form-label">PI Number</label>
+            <input type="text" id="pi-number" class="form-input" value="PI#2028">
+          </div>
+          <div>
+            <label class="form-label">Revision</label>
+            <input type="text" id="pi-revision" class="form-input" value="Revision 1">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Invoice Date</label>
+          <input type="text" id="pi-date" class="form-input" value="04 November 2025">
+        </div>
+      </section>
+
+      <!-- Cost Calculation Rules (Freight, Packaging, Installation) -->
+      <section class="panel-section">
+        <div class="section-heading">3. Dynamic Cost Rules</div>
+        
+        <!-- (1) Freight + Unloading -->
+        <div class="rule-box">
+          <div class="rule-title">
+            <span>(1) Freight + Unloading</span>
+            <span id="label-freight-val" class="highlight-pill">INCLUDED</span>
+          </div>
+          <div class="rule-options">
+            <button type="button" class="rule-option-btn active" data-freight="included">INCLUDED</button>
+            <button type="button" class="rule-option-btn" data-freight="actual">As per Actual</button>
+            <button type="button" class="rule-option-btn" data-freight="percent">% of Product</button>
+          </div>
+          <div id="freight-percent-wrap" style="display:none; margin-top:8px;">
+            <label class="form-label">Freight Percentage (@ %)</label>
+            <input type="number" id="freight-percent" class="form-input" min="0" max="100" step="0.5" value="2.5">
+          </div>
+        </div>
+
+        <!-- (2) Packaging -->
+        <div class="rule-box">
+          <div class="rule-title">
+            <span>(2) Packaging (@ % of Product)</span>
+            <span id="label-pkg-val" class="highlight-pill">0 %</span>
+          </div>
+          <div class="grid-2">
+            <input type="number" id="packaging-percent" class="form-input" min="0" max="100" step="0.5" value="0">
+            <span style="font-size:11px;color:var(--ink-muted);align-self:center;">% of Product Value</span>
+          </div>
+        </div>
+
+        <!-- (3) Installation -->
+        <div class="rule-box">
+          <div class="rule-title">
+            <span>(3) Installation (@ % of Product)</span>
+            <span id="label-inst-val" class="highlight-pill">0 %</span>
+          </div>
+          <div class="grid-2">
+            <input type="number" id="installation-percent" class="form-input" min="0" max="100" step="0.5" value="0">
+            <span style="font-size:11px;color:var(--ink-muted);align-self:center;">% of Product Value</span>
+          </div>
+        </div>
+
+        <!-- GST Rate -->
+        <div class="grid-2 form-group" style="margin-top:10px;">
+          <div>
+            <label class="form-label">GST Tax Rate</label>
+            <select id="gst-rate" class="form-select">
+              <option value="18" selected>18% (Standard)</option>
+              <option value="12">12%</option>
+              <option value="5">5%</option>
+              <option value="0">0% (Exempt)</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- Add Product Item to PI -->
+      <section class="panel-section">
+        <div class="section-heading">
+          <span>4. Products in PI</span>
+          <span id="item-count-badge" style="font-size:11px;color:var(--ink-muted);">1 Item</span>
+        </div>
+        <div id="items-list-container"></div>
+        
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px;margin-top:12px;">
+          <div style="font-size:12px;font-weight:700;margin-bottom:8px;">+ Add New Product Row</div>
+          <div class="form-group">
+            <label class="form-label">Description / Model Name</label>
+            <input type="text" id="new-item-name" class="form-input" placeholder="e.g. KIRA / ANDY 2-SEATER">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Image URL / Symmet Catalog URL</label>
+            <input type="text" id="new-item-img" class="form-input" placeholder="https://... image link">
+          </div>
+          <div class="grid-2 form-group">
+            <div>
+              <label class="form-label">Size (W x L x H x D)</label>
+              <input type="text" id="new-item-size" class="form-input" placeholder="W: 630 X L: 450 X H: 820">
+            </div>
+            <div>
+              <label class="form-label">Upholstery / Top</label>
+              <input type="text" id="new-item-upholstery" class="form-input" value="FABRIC TO BE CONFIRMED">
+            </div>
+          </div>
+          <div class="grid-2 form-group">
+            <div>
+              <label class="form-label">Base</label>
+              <input type="text" id="new-item-base" class="form-input" value="R15">
+            </div>
+            <div>
+              <label class="form-label">Leg Polish</label>
+              <input type="text" id="new-item-leg" class="form-input" value="METAL POLISH">
+            </div>
+          </div>
+          <div class="grid-2 form-group">
+            <div>
+              <label class="form-label">Units (Qty)</label>
+              <input type="number" id="new-item-qty" class="form-input" min="1" value="1">
+            </div>
+            <div>
+              <label class="form-label">Net Unit Price (₹)</label>
+              <input type="number" id="new-item-price" class="form-input" min="0" step="100" value="20960">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Remark</label>
+            <input type="text" id="new-item-remark" class="form-input" value="AUTO-RETURN">
+          </div>
+          <button type="button" class="btn-primary" id="btn-add-item" style="width:100%;margin-top:6px;">Add Line Item</button>
+        </div>
+      </section>
+
+    </aside>
+
+    <!-- RIGHT PI DOCUMENT LIVE PREVIEW -->
+    <section class="document-preview-wrap">
+      
+      <div class="document-sheet" id="pi-render-sheet">
+        
+        <!-- Header -->
+        <table class="pi-tbl-header">
+          <tr>
+            <td style="width: 25%;">
+              <div class="doc-logo-title">Shearling<sup>™</sup></div>
+              <div class="doc-logo-sub">Indo Italian Joint Venture</div>
+            </td>
+            <td style="width: 50%; text-align: center;">
+              <div class="doc-main-title">Performa Invoice</div>
+              <div class="doc-company-name">SHEARLING SKINS PVT LTD</div>
+              <div class="doc-company-sub">PLOT NO 84 SECTOR 8 IMT MANESAR GURGAON(HR) PINCODE-122052</div>
+            </td>
+            <td style="width: 25%;">
+              <div style="font-weight:700;font-size:10px;" id="pv-pi-number">PI#2028 (Revision 1)</div>
+              <div style="font-size:9px;margin-top:4px;" id="pv-pi-date">04 November 2025</div>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Customer & Seller Split -->
+        <table class="pi-tbl-customer">
+          <tr>
+            <td style="width: 65%;">
+              <div style="font-weight:700;margin-bottom:4px;">Customer Details</div>
+              <div><strong>Name :</strong> <span id="pv-cust-name">WORLD MARK</span></div>
+              <div><strong>Contact Person :</strong> <span id="pv-cust-person">RAJAT JAIN</span></div>
+              <div><strong>Address :</strong> <span id="pv-cust-address">AEROCITY, INDIRA GANDHI INTERNATIONAL AIRPORT, NEW DELHI DELHI 110037</span></div>
+              <div><strong>Mob. NO. :</strong> <span id="pv-cust-mobile">+919718362637</span></div>
+              <div><strong>Email Address :</strong> <span id="pv-cust-email">rajat@worldmark.in</span></div>
+            </td>
+            <td style="width: 35%;">
+              <div style="font-weight:700;">SHEARLING SKINS PVT LTD</div>
+              <div style="font-size:8.5px;color:#444;margin:2px 0 4px;">PLOT NO 84 SECTOR 8 IMT MANESAR GURGAON(HR) PINCODE-122052</div>
+              <div><strong>GSTIN NO. :</strong> 06AALCS1032L1ZC</div>
+              <div style="margin-top:6px;"><strong>Contact Person :</strong> Fauzia</div>
+              <div><strong>Mobile :</strong> 9560706640</div>
+              <div><strong>Email Address :</strong> online@shearling.in</div>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Products Line Items -->
+        <table class="pi-tbl-items">
+          <thead>
+            <tr>
+              <th style="width: 4%;">S.No.</th>
+              <th style="width: 14%;">Description</th>
+              <th style="width: 10%;">Picture</th>
+              <th style="width: 18%;">Size</th>
+              <th style="width: 12%;">Upholstery / Top</th>
+              <th style="width: 8%;">Base</th>
+              <th style="width: 9%;">Leg polish</th>
+              <th style="width: 5%;">Units</th>
+              <th style="width: 10%;">Net Price (Rs.)</th>
+              <th style="width: 10%;">Total (Rs.)</th>
+              <th style="width: 6%;">Remark</th>
+            </tr>
+          </thead>
+          <tbody id="pv-items-body">
+            <!-- Populated via JavaScript -->
+          </tbody>
+        </table>
+
+        <!-- Bottom Split: Bank details + Terms (Left) & Cost Calculation Summary (Right) -->
+        <table class="pi-tbl-bottom">
+          <tr>
+            <!-- Left: Bank + Terms -->
+            <td style="width: 58%;">
+              <div class="bank-box">
+                <div class="bank-title">BANK DETAILS:</div>
+                <div><strong>BENEFICIARY NAME:</strong> SHEARLING SKINS PVT LTD</div>
+                <div><strong>BANK NAME:</strong> DEUTSCHE BANK</div>
+                <div><strong>ACCOUNT NO.:</strong> 100041596120019</div>
+                <div><strong>RTGS/NEFT/IFSC CODE:</strong> DEUT0784PBC</div>
+              </div>
+
+              <div class="terms-box">
+                <div class="terms-title">Terms & Condition :</div>
+                <ol class="terms-list">
+                  <li>Lead time : 4 Weeks.</li>
+                  <li>Payment terms - 60% Advance & PO and 40% before delivery</li>
+                  <li>All orders must be written, signed with deposit of Advance</li>
+                  <li>Customer is expected to Inspect the Goods before Final Delivery.</li>
+                  <li>No cancellations will be accepted on custom orders once they are in Production.</li>
+                  <li>No returns will be accepted.</li>
+                  <li>No material will be accepted for claim if marked or cut.</li>
+                  <li>All prices are valid for 30 days</li>
+                  <li>Unloading Charges extra at actual.</li>
+                </ol>
+              </div>
+            </td>
+
+            <!-- Right: Cost Calculation Summary -->
+            <td style="width: 42%; vertical-align: top; padding: 10px;">
+              <table class="summary-calc-table">
+                <tr class="total-row">
+                  <td>Total Amount</td>
+                  <td style="text-align:right;" id="pv-product-total">Rs. 41,920.00</td>
+                </tr>
+                <tr>
+                  <td>Freight</td>
+                  <td style="text-align:right;" id="pv-freight-val">INCLUDED</td>
+                </tr>
+                <tr>
+                  <td>Packaging <span id="pv-pkg-rate">0 %</span></td>
+                  <td style="text-align:right;" id="pv-pkg-val">Rs. 0.00</td>
+                </tr>
+                <tr>
+                  <td>Installation <span id="pv-inst-rate">0 %</span></td>
+                  <td style="text-align:right;" id="pv-inst-val">Rs. 0.00</td>
+                </tr>
+                <tr class="border-top total-row">
+                  <td>Sub Total</td>
+                  <td style="text-align:right;" id="pv-subtotal">Rs. 41,920.00</td>
+                </tr>
+                <tr>
+                  <td>GST <span id="pv-gst-rate">18%</span></td>
+                  <td style="text-align:right;" id="pv-gst-val">Rs. 7,545.60</td>
+                </tr>
+                <tr class="border-top total-row" style="font-size:12px;color:var(--shearling-red);">
+                  <td>Grand Total</td>
+                  <td style="text-align:right;" id="pv-grand-total">Rs. 49,465.60</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <script type="module">
+    import { calculatePITotals, formatINR, downloadShearlingPIPDF, COMPANY_DEFAULTS } from './pi-generator.js';
+
+    // State
+    let items = [
+      {
+        id: '1',
+        description: 'KIRA',
+        name: 'KIRA Chair',
+        imageUrl: 'https://pub-c653cd87442949f8b7fe6e8eb0db85ef.r2.dev/ANDY.webp',
+        size: 'W: 630 X L: 450 X H: 820 X D: 590',
+        upholstery: 'FABRIC TO BE CONFIRMED',
+        base: 'R15',
+        legPolish: 'METAL POLISH',
+        qty: 2,
+        unitPrice: 20960,
+        remark: 'AUTO-RETURN'
+      }
+    ];
+
+    let options = {
+      freightType: 'included',
+      freightPercent: 0,
+      packagingPercent: 0,
+      installationPercent: 0,
+      gstPercent: 18
+    };
+
+    function renderUI() {
+      // 1. Render Left items list
+      const container = document.getElementById('items-list-container');
+      container.innerHTML = items.map((itm, idx) => `
+        <div class="item-card-mini">
+          <img src="${itm.imageUrl || 'assets/mark_slate.png'}" class="item-thumb-mini" alt="${itm.description}">
+          <div class="item-meta-mini">
+            <div class="item-title-mini">${itm.description} (${itm.qty} units)</div>
+            <div class="item-sub-mini">${itm.size}</div>
+            <div class="item-sub-mini" style="font-weight:600;color:var(--ink);">${formatINR(itm.unitPrice * itm.qty)}</div>
+          </div>
+          <button type="button" class="btn-del-item" data-idx="${idx}">&times;</button>
+        </div>
+      `).join('');
+
+      document.getElementById('item-count-badge').textContent = `${items.length} ${items.length === 1 ? 'Item' : 'Items'}`;
+
+      // 2. Render Sheet Customer Meta
+      document.getElementById('pv-cust-name').textContent = document.getElementById('cust-name').value || '—';
+      document.getElementById('pv-cust-person').textContent = document.getElementById('cust-person').value || '—';
+      document.getElementById('pv-cust-address').textContent = document.getElementById('cust-address').value || '—';
+      document.getElementById('pv-cust-mobile').textContent = document.getElementById('cust-mobile').value || '—';
+      document.getElementById('pv-cust-email').textContent = document.getElementById('cust-email').value || '—';
+
+      const piNo = document.getElementById('pi-number').value || 'PI#2028';
+      const piRev = document.getElementById('pi-revision').value || 'Revision 1';
+      document.getElementById('pv-pi-number').textContent = `${piNo} (${piRev})`;
+      document.getElementById('pv-pi-date').textContent = document.getElementById('pi-date').value || '—';
+
+      // 3. Render Table rows
+      const tbody = document.getElementById('pv-items-body');
+      tbody.innerHTML = items.map((itm, idx) => {
+        const lineTotal = (Number(itm.unitPrice) || 0) * (Number(itm.qty) || 1);
+        return `
+          <tr>
+            <td>${idx + 1}</td>
+            <td class="al-left"><strong>${itm.description}</strong></td>
+            <td><img src="${itm.imageUrl || 'assets/mark_slate.png'}" class="item-img-preview" alt="Product"></td>
+            <td class="al-left">${itm.size || '—'}</td>
+            <td class="al-left">${itm.upholstery || '—'}</td>
+            <td>${itm.base || '—'}</td>
+            <td>${itm.legPolish || '—'}</td>
+            <td>${itm.qty}</td>
+            <td class="al-right">${formatINR(itm.unitPrice, false)}</td>
+            <td class="al-right"><strong>${formatINR(lineTotal, false)}</strong></td>
+            <td>${itm.remark || '—'}</td>
+          </tr>
+        `;
+      }).join('');
+
+      // 4. Calculate Totals
+      const totals = calculatePITotals(items, options);
+
+      // Labels on left panel
+      if (options.freightType === 'included') {
+        document.getElementById('label-freight-val').textContent = 'INCLUDED';
+      } else if (options.freightType === 'actual') {
+        document.getElementById('label-freight-val').textContent = 'AS PER ACTUAL';
+      } else {
+        document.getElementById('label-freight-val').textContent = `@ ${options.freightPercent}% (${formatINR(totals.freightAmount)})`;
+      }
+
+      document.getElementById('label-pkg-val').textContent = `${options.packagingPercent}% (${formatINR(totals.packagingAmount)})`;
+      document.getElementById('label-inst-val').textContent = `${options.installationPercent}% (${formatINR(totals.installationAmount)})`;
+
+      // Preview sheet numbers
+      document.getElementById('pv-product-total').textContent = formatINR(totals.productTotal);
+      document.getElementById('pv-freight-val').textContent = totals.freightType === 'percent' ? `${formatINR(totals.freightAmount)} (${options.freightPercent}%)` : totals.freightLabel;
+      
+      document.getElementById('pv-pkg-rate').textContent = `${options.packagingPercent} %`;
+      document.getElementById('pv-pkg-val').textContent = formatINR(totals.packagingAmount);
+
+      document.getElementById('pv-inst-rate').textContent = `${options.installationPercent} %`;
+      document.getElementById('pv-inst-val').textContent = formatINR(totals.installationAmount);
+
+      document.getElementById('pv-subtotal').textContent = formatINR(totals.subTotal);
+      document.getElementById('pv-gst-rate').textContent = `${options.gstPercent}%`;
+      document.getElementById('pv-gst-val').textContent = formatINR(totals.gstAmount);
+      document.getElementById('pv-grand-total').textContent = formatINR(totals.grandTotal);
+    }
+
+    // Event Listeners
+    document.querySelectorAll('.rule-option-btn[data-freight]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.rule-option-btn[data-freight]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        options.freightType = btn.dataset.freight;
+        document.getElementById('freight-percent-wrap').style.display = options.freightType === 'percent' ? 'block' : 'none';
+        renderUI();
+      });
+    });
+
+    document.getElementById('freight-percent').addEventListener('input', (e) => {
+      options.freightPercent = Number(e.target.value) || 0;
+      renderUI();
+    });
+
+    document.getElementById('packaging-percent').addEventListener('input', (e) => {
+      options.packagingPercent = Number(e.target.value) || 0;
+      renderUI();
+    });
+
+    document.getElementById('installation-percent').addEventListener('input', (e) => {
+      options.installationPercent = Number(e.target.value) || 0;
+      renderUI();
+    });
+
+    document.getElementById('gst-rate').addEventListener('change', (e) => {
+      options.gstPercent = Number(e.target.value) || 0;
+      renderUI();
+    });
+
+    ['cust-name', 'cust-person', 'cust-address', 'cust-mobile', 'cust-email', 'pi-number', 'pi-revision', 'pi-date'].forEach(id => {
+      document.getElementById(id).addEventListener('input', renderUI);
+    });
+
+    // Add item
+    document.getElementById('btn-add-item').addEventListener('click', () => {
+      const name = document.getElementById('new-item-name').value.trim() || 'Custom Piece';
+      const img = document.getElementById('new-item-img').value.trim() || 'https://pub-c653cd87442949f8b7fe6e8eb0db85ef.r2.dev/ANDY.webp';
+      const size = document.getElementById('new-item-size').value.trim() || 'W: 600 X L: 600 X H: 800';
+      const uph = document.getElementById('new-item-upholstery').value.trim() || 'FABRIC TO BE CONFIRMED';
+      const base = document.getElementById('new-item-base').value.trim() || 'R15';
+      const leg = document.getElementById('new-item-leg').value.trim() || 'METAL POLISH';
+      const qty = Number(document.getElementById('new-item-qty').value) || 1;
+      const price = Number(document.getElementById('new-item-price').value) || 0;
+      const remark = document.getElementById('new-item-remark').value.trim() || '—';
+
+      items.push({
+        id: String(Date.now()),
+        description: name,
+        name: name,
+        imageUrl: img,
+        size: size,
+        upholstery: uph,
+        base: base,
+        legPolish: leg,
+        qty: qty,
+        unitPrice: price,
+        remark: remark
+      });
+
+      document.getElementById('new-item-name').value = '';
+      renderUI();
+    });
+
+    // Delete item
+    document.getElementById('items-list-container').addEventListener('click', (e) => {
+      if (e.target.classList.contains('btn-del-item')) {
+        const idx = Number(e.target.dataset.idx);
+        items.splice(idx, 1);
+        renderUI();
+      }
+    });
+
+    // Load sample
+    document.getElementById('btn-add-sample').addEventListener('click', () => {
+      items = [
+        {
+          id: '1',
+          description: 'KIRA',
+          name: 'KIRA Chair',
+          imageUrl: 'https://pub-c653cd87442949f8b7fe6e8eb0db85ef.r2.dev/ANDY.webp',
+          size: 'W: 630 X L: 450 X H: 820 X D: 590',
+          upholstery: 'FABRIC TO BE CONFIRMED',
+          base: 'R15',
+          legPolish: 'METAL POLISH',
+          qty: 2,
+          unitPrice: 20960,
+          remark: 'AUTO-RETURN'
+        }
+      ];
+      options = {
+        freightType: 'included',
+        freightPercent: 0,
+        packagingPercent: 0,
+        installationPercent: 0,
+        gstPercent: 18
+      };
+      document.querySelector('.rule-option-btn[data-freight="included"]').click();
+      document.getElementById('packaging-percent').value = 0;
+      document.getElementById('installation-percent').value = 0;
+      renderUI();
+    });
+
+    // Export PDF
+    document.getElementById('btn-export-pdf').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-export-pdf');
+      const origText = btn.innerHTML;
+      btn.innerHTML = 'Generating PDF...';
+      btn.disabled = true;
+
+      try {
+        await downloadShearlingPIPDF({
+          company: COMPANY_DEFAULTS,
+          customer: {
+            name: document.getElementById('cust-name').value,
+            contactPerson: document.getElementById('cust-person').value,
+            address: document.getElementById('cust-address').value,
+            mobile: document.getElementById('cust-mobile').value,
+            email: document.getElementById('cust-email').value
+          },
+          meta: {
+            piNumber: document.getElementById('pi-number').value,
+            revision: document.getElementById('pi-revision').value,
+            date: document.getElementById('pi-date').value
+          },
+          items: items,
+          options: options
+        });
+      } catch (err) {
+        console.error("PDF generation failed:", err);
+        alert("Could not generate PDF: " + err.message);
+      } finally {
+        btn.innerHTML = origText;
+        btn.disabled = false;
+      }
+    });
+
+    // Check if passed items via URL query params or localStorage
+    const savedCart = localStorage.getItem('symmet_cart');
+    if (savedCart) {
+      try {
+        const parsed = JSON.parse(savedCart);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // offer to load active cart items
+          console.log("Found existing cart items in session:", parsed);
+        }
+      } catch (e) {}
+    }
+
+    // Initial render
+    renderUI();
+  </script>
+</body>
+</html>
