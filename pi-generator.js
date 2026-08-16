@@ -1,5 +1,5 @@
 /**
- * Shearling / Symmet Proforma Invoice (PI) Engine
+ * SYMMET / Think Tank Consultancy Proforma Invoice (PI) Engine
  * Implements exact document structure, dynamic percentages & calculations:
  * 1. Freight + unloading (INCLUDED / As per Actual / @ X% of product value)
  * 2. Packaging @ X% of product value
@@ -9,18 +9,21 @@
  */
 
 export const COMPANY_DEFAULTS = {
-  name: "SHEARLING SKINS PVT LTD",
-  brandSubtitle: "Indo Italian Joint Venture",
+  brand: "SYMMET",
+  logoUrl: "assets/wordmark_trim.png",
+  name: "THINK TANK CONSULTANCY",
+  brandSubtitle: "Think Tank Consultancy",
   address: "PLOT NO 84 SECTOR 8 IMT MANESAR GURGAON(HR) PINCODE-122052",
-  gstin: "06AALCS1032L1ZC",
+  gstin: "07AOMPK1089H1ZP",
   contactPerson: "Fauzia",
-  contactMobile: "+91 9560706640",
-  contactEmail: "online@shearling.in",
+  contactMobile: "+91 9818381951",
+  contactEmail: "sales@symmet.in",
+  contactEmailAlt: "keshri74shekhar@gmail.com",
   bankDetails: {
-    beneficiaryName: "SHEARLING SKINS PVT LTD",
-    bankName: "DEUTSCHE BANK",
-    accountNo: "100041596120019",
-    ifscCode: "DEUT0784PBC"
+    beneficiaryName: "THINK TANK CONSULTANCY",
+    bankName: "CANARA BANK, WAZIRPUR BRANCH",
+    accountNo: "110144272490",
+    ifscCode: "CNRB0000387"
   },
   terms: [
     "Lead time : 4 Weeks.",
@@ -127,9 +130,9 @@ export async function getBase64ImageFromUrl(imageUrl) {
 }
 
 /**
- * Generate and download Shearling Proforma Invoice PDF
+ * Generate and download SYMMET Proforma Invoice PDF
  */
-export async function downloadShearlingPIPDF(piData) {
+export async function downloadSymmetPIPDF(piData) {
   const { jsPDF } = window.jspdf || {};
   if (!jsPDF) {
     throw new Error("jsPDF library not loaded");
@@ -164,15 +167,29 @@ export async function downloadShearlingPIPDF(piData) {
   const headerHeight = 28;
   doc.rect(margin, currentY, contentWidth, headerHeight);
 
-  // Top Left: Logo / Brand
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
-  doc.setTextColor(190, 45, 45); // Shearling red accent
-  doc.text("Shearling", margin + 4, currentY + 9);
+  // Top Left: Logo / Brand (SYMMET wordmark; falls back to accent text)
+  const logoB64 = await getBase64ImageFromUrl(company.logoUrl);
+  if (logoB64) {
+    const logoW = 30;
+    const logoH = logoW * (301 / 1189); // wordmark_trim.png aspect
+    try {
+      doc.addImage(logoB64, 'PNG', margin + 3, currentY + 4, logoW, logoH);
+    } catch (e) {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.setTextColor(190, 45, 45);
+      doc.text(company.brand, margin + 4, currentY + 9);
+    }
+  } else {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.setTextColor(190, 45, 45);
+    doc.text(company.brand, margin + 4, currentY + 9);
+  }
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(90, 90, 90);
-  doc.text("Indo Italian Joint Venture", margin + 4, currentY + 14);
+  doc.text(company.brandSubtitle, margin + 4, currentY + 14);
 
   // Center: Document Title & Company Name
   doc.setFont("helvetica", "bold");
@@ -203,7 +220,7 @@ export async function downloadShearlingPIPDF(piData) {
   currentY += headerHeight;
 
   // --- CUSTOMER & CONTACT SECTION ---
-  const custHeight = 24;
+  const custHeight = 27;
   doc.rect(margin, currentY, contentWidth, custHeight);
   const custSplitX = margin + (contentWidth * 0.65);
   doc.line(custSplitX, currentY, custSplitX, currentY + custHeight);
@@ -232,6 +249,7 @@ export async function downloadShearlingPIPDF(piData) {
   doc.text(`Contact Person : ${company.contactPerson}`, custSplitX + 3, currentY + 9.5);
   doc.text(`Mobile : ${company.contactMobile}`, custSplitX + 3, currentY + 14);
   doc.text(`Email : ${company.contactEmail}`, custSplitX + 3, currentY + 18.5);
+  doc.text(`Email : ${company.contactEmailAlt || ''}`, custSplitX + 3, currentY + 22);
 
   currentY += custHeight;
 
@@ -405,5 +423,5 @@ export async function downloadShearlingPIPDF(piData) {
 
   // Save the PDF
   const cleanPIName = (meta.piNumber || "Proforma_Invoice").replace(/[^a-z0-9_-]/gi, "_");
-  doc.save(`${cleanPIName}_Shearling.pdf`);
+  doc.save(`${cleanPIName}_Symmet.pdf`);
 }

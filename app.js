@@ -124,6 +124,12 @@ const SPECS = [
 
 /* ---- STATE ---- */
 let cart = [];
+// Cart persists so the Proforma Invoice generator (/pi.html) can auto-sync it.
+const CART_KEY = 'symmet_cart';
+try {
+  const saved = localStorage.getItem(CART_KEY);
+  if (saved) cart = JSON.parse(saved) || [];
+} catch (e) { cart = []; }
 let currentProduct = null;
 let pdpQty = 1;
 let pdpVariants = [];
@@ -399,6 +405,7 @@ function renderCartItems() {
 }
 
 function updateCartFooter() {
+  try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch (e) {}
   const footer = document.getElementById('cart-footer');
   const totalLabel = document.getElementById('cart-total-label');
   if (cart.length > 0) {
@@ -1129,6 +1136,7 @@ async function init() {
   initStudio();
   initFooterForm();
   initShopCarousel();
+  if (cart.length) { updateCartBadge(); updateCartFooter(); } // restored persisted cart
 
   // 3D modal close handlers
   document.getElementById('model-close')?.addEventListener('click', closeModel);

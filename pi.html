@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Shearling / Symmet — Proforma Invoice (PI) Generator</title>
+  <title>SYMMET — Proforma Invoice (PI) Generator</title>
   <meta name="description" content="Generate official system-generated Proforma Invoices with live calculations for Freight, Packaging, and Installation.">
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,7 +26,7 @@
       --border: #E4DDCF;
       --accent: #B7533E;
       --accent-hover: #9E3F2C;
-      --shearling-red: #C53030;
+      --symmet-red: #C53030;
       --shadow-sm: 0 2px 8px rgba(27, 37, 56, 0.04);
       --shadow-md: 0 8px 24px rgba(27, 37, 56, 0.08);
       --shadow-lg: 0 16px 40px rgba(27, 37, 56, 0.12);
@@ -67,7 +67,12 @@
       font-size: 20px;
       font-weight: 700;
       letter-spacing: -0.02em;
-      color: var(--shearling-red);
+      color: var(--ink);
+    }
+    .pi-brand-logo img {
+      height: 22px;
+      width: auto;
+      display: block;
     }
 
     .pi-brand-badge {
@@ -336,8 +341,13 @@
     .doc-logo-title {
       font-size: 18px;
       font-weight: 800;
-      color: var(--shearling-red);
+      color: var(--symmet-red);
       line-height: 1.1;
+    }
+    .doc-logo-title img {
+      height: 22px;
+      width: auto;
+      display: block;
     }
     .doc-logo-sub {
       font-size: 9px;
@@ -471,6 +481,54 @@
       font-weight: 600;
       font-size: 9px;
     }
+
+    /* ---- PRINT LAYOUT ---- */
+    @media print {
+      @page {
+        size: A4;
+        margin: 8mm 6mm;
+      }
+      html, body {
+        background: #FFF !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      /* Hide the left control panel and header when printing */
+      .pi-header,
+      .control-panel {
+        display: none !important;
+      }
+      .pi-workspace {
+        display: block !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+      }
+      .document-preview-wrap {
+        display: block !important;
+      }
+      .document-sheet {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      /* Prevent section tables from splitting across pages */
+      .pi-tbl-header {
+        page-break-after: avoid;
+      }
+      .pi-tbl-customer {
+        page-break-after: avoid;
+      }
+      .pi-tbl-items thead {
+        display: table-header-group;
+      }
+      .pi-tbl-items tr {
+        page-break-inside: avoid;
+      }
+      .pi-tbl-bottom {
+        page-break-inside: avoid;
+      }
+    }
   </style>
 </head>
 <body>
@@ -478,7 +536,7 @@
   <!-- Top Navigation Bar -->
   <header class="pi-header">
     <a href="index.html" class="pi-brand">
-      <span class="pi-brand-logo">Shearling</span>
+      <span class="pi-brand-logo"><img src="assets/wordmark_trim.png" alt="SYMMET"></span>
       <span class="pi-brand-badge">Proforma Invoice Studio</span>
     </a>
     <div class="pi-header-actions">
@@ -523,9 +581,27 @@
         </div>
       </section>
 
+      <!-- Sender Company Info (editable) -->
+      <section class="panel-section">
+        <div class="section-heading">2. Your Company Details</div>
+        <div class="grid-2 form-group">
+          <div>
+            <label class="form-label">Contact Person</label>
+            <input type="text" id="co-person" class="form-input" value="Fauzia">
+          </div>
+          <div>
+            <label class="form-label">Mobile</label>
+            <input type="text" id="co-mobile" class="form-input" value="+91 9818381951">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Emails (fixed: sales@symmet.in · keshri74shekhar@gmail.com)</label>
+        </div>
+      </section>
+
       <!-- Invoice Metadata -->
       <section class="panel-section">
-        <div class="section-heading">2. Invoice Details</div>
+        <div class="section-heading">3. Invoice Details</div>
         <div class="grid-2 form-group">
           <div>
             <label class="form-label">PI Number</label>
@@ -544,7 +620,7 @@
 
       <!-- Cost Calculation Rules (Freight, Packaging, Installation) -->
       <section class="panel-section">
-        <div class="section-heading">3. Dynamic Cost Rules</div>
+        <div class="section-heading">4. Dynamic Cost Rules</div>
         
         <!-- (1) Freight + Unloading -->
         <div class="rule-box">
@@ -604,13 +680,21 @@
       <!-- Add Product Item to PI -->
       <section class="panel-section">
         <div class="section-heading">
-          <span>4. Products in PI</span>
+          <span>5. Products in PI</span>
           <span id="item-count-badge" style="font-size:11px;color:var(--ink-muted);">1 Item</span>
         </div>
+        <div id="cart-sync-note" style="display:none;background:#EBF8FF;border:1px solid #BEE3F8;color:#2B6CB0;border-radius:6px;padding:8px 10px;font-size:12px;margin-bottom:10px;"></div>
+        <button type="button" class="btn-secondary" id="btn-sync-cart" style="width:100%;margin-bottom:12px;">Sync Cart from symmet.in</button>
         <div id="items-list-container"></div>
         
         <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px;margin-top:12px;">
           <div style="font-size:12px;font-weight:700;margin-bottom:8px;">+ Add New Product Row</div>
+          <div class="form-group">
+            <label class="form-label">Pick from Full Catalogue (<span id="picker-count">…</span> products)</label>
+            <input type="text" id="new-item-search" class="form-input" list="pi-product-list" placeholder="Type to search — e.g. Sofa Aria, lounge, bar stool…">
+            <datalist id="pi-product-list"></datalist>
+            <div id="picker-preview" style="display:none;margin-top:8px;font-size:11px;color:var(--ink-muted);"></div>
+          </div>
           <div class="form-group">
             <label class="form-label">Description / Model Name</label>
             <input type="text" id="new-item-name" class="form-input" placeholder="e.g. KIRA / ANDY 2-SEATER">
@@ -668,12 +752,12 @@
         <table class="pi-tbl-header">
           <tr>
             <td style="width: 25%;">
-              <div class="doc-logo-title">Shearling<sup>™</sup></div>
-              <div class="doc-logo-sub">Indo Italian Joint Venture</div>
+              <div class="doc-logo-title"><img src="assets/wordmark_trim.png" alt="SYMMET"></div>
+              <div class="doc-logo-sub">Think Tank Consultancy</div>
             </td>
             <td style="width: 50%; text-align: center;">
               <div class="doc-main-title">Performa Invoice</div>
-              <div class="doc-company-name">SHEARLING SKINS PVT LTD</div>
+              <div class="doc-company-name">THINK TANK CONSULTANCY</div>
               <div class="doc-company-sub">PLOT NO 84 SECTOR 8 IMT MANESAR GURGAON(HR) PINCODE-122052</div>
             </td>
             <td style="width: 25%;">
@@ -695,12 +779,13 @@
               <div><strong>Email Address :</strong> <span id="pv-cust-email">rajat@worldmark.in</span></div>
             </td>
             <td style="width: 35%;">
-              <div style="font-weight:700;">SHEARLING SKINS PVT LTD</div>
+              <div style="font-weight:700;" id="pv-co-name">THINK TANK CONSULTANCY</div>
               <div style="font-size:8.5px;color:#444;margin:2px 0 4px;">PLOT NO 84 SECTOR 8 IMT MANESAR GURGAON(HR) PINCODE-122052</div>
-              <div><strong>GSTIN NO. :</strong> 06AALCS1032L1ZC</div>
-              <div style="margin-top:6px;"><strong>Contact Person :</strong> Fauzia</div>
-              <div><strong>Mobile :</strong> 9560706640</div>
-              <div><strong>Email Address :</strong> online@shearling.in</div>
+              <div><strong>GSTIN NO. :</strong> 07AOMPK1089H1ZP</div>
+              <div style="margin-top:6px;"><strong>Contact Person :</strong> <span id="pv-co-person">Fauzia</span></div>
+              <div><strong>Mobile :</strong> <span id="pv-co-mobile">9818381951</span></div>
+              <div><strong>Email Address :</strong> <span id="pv-co-email1">sales@symmet.in</span></div>
+              <div><strong>Email Address :</strong> <span id="pv-co-email2">keshri74shekhar@gmail.com</span></div>
             </td>
           </tr>
         </table>
@@ -734,10 +819,10 @@
             <td style="width: 58%;">
               <div class="bank-box">
                 <div class="bank-title">BANK DETAILS:</div>
-                <div><strong>BENEFICIARY NAME:</strong> SHEARLING SKINS PVT LTD</div>
-                <div><strong>BANK NAME:</strong> DEUTSCHE BANK</div>
-                <div><strong>ACCOUNT NO.:</strong> 100041596120019</div>
-                <div><strong>RTGS/NEFT/IFSC CODE:</strong> DEUT0784PBC</div>
+                <div><strong>BENEFICIARY NAME:</strong> THINK TANK CONSULTANCY</div>
+                <div><strong>BANK NAME:</strong> CANARA BANK, WAZIRPUR BRANCH</div>
+                <div><strong>ACCOUNT NO.:</strong> 110144272490</div>
+                <div><strong>RTGS/NEFT/IFSC CODE:</strong> CNRB0000387</div>
               </div>
 
               <div class="terms-box">
@@ -783,7 +868,7 @@
                   <td>GST <span id="pv-gst-rate">18%</span></td>
                   <td style="text-align:right;" id="pv-gst-val">Rs. 7,545.60</td>
                 </tr>
-                <tr class="border-top total-row" style="font-size:12px;color:var(--shearling-red);">
+                <tr class="border-top total-row" style="font-size:12px;color:var(--symmet-red);">
                   <td>Grand Total</td>
                   <td style="text-align:right;" id="pv-grand-total">Rs. 49,465.60</td>
                 </tr>
@@ -799,7 +884,8 @@
   </main>
 
   <script type="module">
-    import { calculatePITotals, formatINR, downloadShearlingPIPDF, COMPANY_DEFAULTS } from './pi-generator.js';
+    import { calculatePITotals, formatINR, downloadSymmetPIPDF, COMPANY_DEFAULTS } from './pi-generator.js';
+    import { PI_PRODUCTS } from './pi-products.js';
 
     // State
     let items = [
@@ -807,7 +893,7 @@
         id: '1',
         description: 'KIRA',
         name: 'KIRA Chair',
-        imageUrl: 'https://pub-c653cd87442949f8b7fe6e8eb0db85ef.r2.dev/ANDY.webp',
+        imageUrl: 'assets/chair.png',
         size: 'W: 630 X L: 450 X H: 820 X D: 590',
         upholstery: 'FABRIC TO BE CONFIRMED',
         base: 'R15',
@@ -831,7 +917,7 @@
       const container = document.getElementById('items-list-container');
       container.innerHTML = items.map((itm, idx) => `
         <div class="item-card-mini">
-          <img src="${itm.imageUrl || 'assets/mark_slate.png'}" class="item-thumb-mini" alt="${itm.description}">
+          <img src="${itm.imageUrl || 'assets/chairs.png'}" class="item-thumb-mini" alt="${itm.description}">
           <div class="item-meta-mini">
             <div class="item-title-mini">${itm.description} (${itm.qty} units)</div>
             <div class="item-sub-mini">${itm.size}</div>
@@ -855,6 +941,10 @@
       document.getElementById('pv-pi-number').textContent = `${piNo} (${piRev})`;
       document.getElementById('pv-pi-date').textContent = document.getElementById('pi-date').value || '—';
 
+      // 2b. Company sender fields (emails are fixed defaults, never edited)
+      document.getElementById('pv-co-person').textContent = document.getElementById('co-person').value || '—';
+      document.getElementById('pv-co-mobile').textContent = document.getElementById('co-mobile').value || '—';
+
       // 3. Render Table rows
       const tbody = document.getElementById('pv-items-body');
       tbody.innerHTML = items.map((itm, idx) => {
@@ -863,7 +953,7 @@
           <tr>
             <td>${idx + 1}</td>
             <td class="al-left"><strong>${itm.description}</strong></td>
-            <td><img src="${itm.imageUrl || 'assets/mark_slate.png'}" class="item-img-preview" alt="Product"></td>
+            <td><img src="${itm.imageUrl || 'assets/chairs.png'}" class="item-img-preview" alt="Product"></td>
             <td class="al-left">${itm.size || '—'}</td>
             <td class="al-left">${itm.upholstery || '—'}</td>
             <td>${itm.base || '—'}</td>
@@ -938,14 +1028,61 @@
       renderUI();
     });
 
-    ['cust-name', 'cust-person', 'cust-address', 'cust-mobile', 'cust-email', 'pi-number', 'pi-revision', 'pi-date'].forEach(id => {
+    ['cust-name', 'cust-person', 'cust-address', 'cust-mobile', 'cust-email', 'pi-number', 'pi-revision', 'pi-date', 'co-person', 'co-mobile'].forEach(id => {
       document.getElementById(id).addEventListener('input', renderUI);
     });
+
+    // Remember edited company details (and customer info) across visits
+    const FORM_KEYS = ['cust-name', 'cust-person', 'cust-address', 'cust-mobile', 'cust-email', 'co-person', 'co-mobile'];
+    const savedForm = localStorage.getItem('symmet_pi_form');
+    if (savedForm) {
+      try {
+        Object.entries(JSON.parse(savedForm)).forEach(([id, val]) => {
+          const el = document.getElementById(id);
+          if (el && typeof val === 'string' && val.trim()) el.value = val;
+        });
+      } catch (e) {}
+    }
+    FORM_KEYS.forEach(id => {
+      document.getElementById(id).addEventListener('input', () => {
+        const state = {};
+        FORM_KEYS.forEach(k => { state[k] = document.getElementById(k).value; });
+        try { localStorage.setItem('symmet_pi_form', JSON.stringify(state)); } catch (e) {}
+      });
+    });
+
+    // Full-catalogue product picker: every catalogue product/variant is
+    // searchable and prefills the row (name, size, base, price, image).
+    const pickerInput = document.getElementById('new-item-search');
+    const pickerList = document.getElementById('pi-product-list');
+    const pickerPreview = document.getElementById('picker-preview');
+    document.getElementById('picker-count').textContent = PI_PRODUCTS.length;
+
+    const pickerLabel = (p) => `${p.label} — ${p.code}`;
+
+    pickerList.innerHTML = PI_PRODUCTS.map((p, i) =>
+      `<option value="${pickerLabel(p).replace(/"/g, '&quot;')}" data-idx="${i}">`
+    ).join('');
+
+    function onPickerPick() {
+      const sel = PI_PRODUCTS.find((p) => pickerLabel(p) === pickerInput.value.trim());
+      if (!sel) { pickerPreview.style.display = 'none'; return; }
+      document.getElementById('new-item-name').value = `${sel.label} (${sel.code})`;
+      if (sel.image) document.getElementById('new-item-img').value = sel.image;
+      if (sel.size) document.getElementById('new-item-size').value = sel.size;
+      document.getElementById('new-item-base').value = sel.base || 'R15';
+      document.getElementById('new-item-price').value = sel.price;
+      pickerPreview.style.display = 'block';
+      pickerPreview.innerHTML = `<strong>${sel.label}</strong> · ${sel.category} · ${sel.code}<br>Size: ${sel.size || '—'} · Base: ${sel.base || '—'} · Price: ₹${sel.price.toLocaleString('en-IN')}`;
+    }
+    // 'input' fires on datalist commit without needing a blur; 'change' is the fallback.
+    pickerInput.addEventListener('input', onPickerPick);
+    pickerInput.addEventListener('change', onPickerPick);
 
     // Add item
     document.getElementById('btn-add-item').addEventListener('click', () => {
       const name = document.getElementById('new-item-name').value.trim() || 'Custom Piece';
-      const img = document.getElementById('new-item-img').value.trim() || 'https://pub-c653cd87442949f8b7fe6e8eb0db85ef.r2.dev/ANDY.webp';
+      const img = document.getElementById('new-item-img').value.trim() || 'assets/chair.png';
       const size = document.getElementById('new-item-size').value.trim() || 'W: 600 X L: 600 X H: 800';
       const uph = document.getElementById('new-item-upholstery').value.trim() || 'FABRIC TO BE CONFIRMED';
       const base = document.getElementById('new-item-base').value.trim() || 'R15';
@@ -988,7 +1125,7 @@
           id: '1',
           description: 'KIRA',
           name: 'KIRA Chair',
-          imageUrl: 'https://pub-c653cd87442949f8b7fe6e8eb0db85ef.r2.dev/ANDY.webp',
+          imageUrl: 'assets/chair.png',
           size: 'W: 630 X L: 450 X H: 820 X D: 590',
           upholstery: 'FABRIC TO BE CONFIRMED',
           base: 'R15',
@@ -1019,8 +1156,12 @@
       btn.disabled = true;
 
       try {
-        await downloadShearlingPIPDF({
-          company: COMPANY_DEFAULTS,
+        await downloadSymmetPIPDF({
+          company: {
+            ...COMPANY_DEFAULTS,
+            contactPerson: document.getElementById('co-person').value,
+            contactMobile: document.getElementById('co-mobile').value,
+          },
           customer: {
             name: document.getElementById('cust-name').value,
             contactPerson: document.getElementById('cust-person').value,
@@ -1047,15 +1188,54 @@
 
     // Check if passed items via URL query params or localStorage
     const savedCart = localStorage.getItem('symmet_cart');
-    if (savedCart) {
-      try {
-        const parsed = JSON.parse(savedCart);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          // offer to load active cart items
-          console.log("Found existing cart items in session:", parsed);
-        }
-      } catch (e) {}
+
+    // Map a shop cart item (from symmet.in) to a PI line item, enriching
+    // size/base from the catalogue when the product can be matched.
+    function cartItemToPI(c) {
+      const label = (c.name || '').trim();
+      const match = PI_PRODUCTS.find((p) => {
+        const code = (c.code || c.id || '').split(' · ')[0].trim();
+        return code === p.code || (label && p.label.toLowerCase() === label.toLowerCase());
+      });
+      return {
+        id: String(c.id || Date.now()),
+        description: match ? `${match.label} (${match.code})` : (label || c.id || 'Custom Piece'),
+        name: label,
+        imageUrl: c.image || (match ? match.image : '') || '',
+        size: (c.size || (match ? match.size : '') || '—'),
+        upholstery: 'FABRIC TO BE CONFIRMED',
+        base: (match && match.base) || 'R15',
+        legPolish: 'METAL POLISH',
+        qty: Number(c.qty) || 1,
+        unitPrice: Number(c.price) || (match ? match.price : 0),
+        remark: '—'
+      };
     }
+
+    function syncCartToPI(showToast) {
+      let parsed = null;
+      try { parsed = JSON.parse(localStorage.getItem('symmet_cart') || 'null'); } catch (e) {}
+      if (!Array.isArray(parsed) || parsed.length === 0) {
+        if (showToast) alert('No cart items found on this device. Add products to the cart on symmet.in first.');
+        return;
+      }
+      items = parsed.map(cartItemToPI);
+      renderUI();
+      const note = document.getElementById('cart-sync-note');
+      if (note) {
+        note.style.display = 'block';
+        note.innerHTML = `Auto-synced <strong>${items.length} item(s)</strong> from your symmet.in cart.`;
+      }
+    }
+
+    document.getElementById('btn-sync-cart').addEventListener('click', () => syncCartToPI(true));
+
+    // Auto-sync on load when a cart exists
+    try {
+      const parsed = JSON.parse(savedCart || 'null');
+      if (Array.isArray(parsed) && parsed.length > 0) syncCartToPI(false);
+    } catch (e) {}
+    void savedCart;
 
     // Initial render
     renderUI();
