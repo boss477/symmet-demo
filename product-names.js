@@ -248,4 +248,6 @@ const PRODUCT_NAMES = {
   "SMKAP BT 008": "Bar Table Hoghead",
   "SMKAP BT 009": "Bar Table Iris",
   "SMKAP BT 010": "Bar Table Jigger",
+  "KIRA": "KIRA Chair",
+  "KIRA-SET": "KIRA Chairs Set",
 };

@@ -88,13 +88,55 @@ function prettyName(category, s_no, product_code) {
   return `${prettyCategory(category)} No. ${s_no}`;
 }
 
+const KIRA_PRODUCTS = [
+  {
+    id: 'KIRA',
+    name: 'KIRA Chair',
+    price: 20960,
+    maxPrice: 20960,
+    category: 'METAL  CHAIR',
+    image: 'https://pub-f39929fd39284c6a93de3bd82bfd6841.r2.dev/chair.png',
+    desc: 'Commercial-grade metal dining & conference chair with auto-return swivel mechanism and precision metal polish base.',
+    details: {
+      product_code: 'KIRA',
+      category: 'METAL  CHAIR',
+      variants: [
+        {
+          code: 'KIRA',
+          seater: 'Single Chair',
+          description: 'KIRA Metal Chair with auto-return swivel mechanism (W 63 × D 59 × H 82 cm).',
+          price: 20960,
+          display_price: 20960,
+          size: 'W: 630 × L: 450 × H: 820 × D: 590 mm',
+          length_mm: 630,
+          width_or_diameter_mm: 450,
+          height_mm: 820,
+          base: 'R15 Metal Polish Auto-Return',
+        },
+        {
+          code: 'KIRA-SET',
+          seater: 'Set of Chairs',
+          description: 'KIRA Metal Chairs Set with matching finish and auto-return base.',
+          price: 20960,
+          display_price: 20960,
+          size: 'W: 630 × L: 450 × H: 820 × D: 590 mm',
+          length_mm: 630,
+          width_or_diameter_mm: 450,
+          height_mm: 820,
+          base: 'R15 Metal Polish Auto-Return',
+        }
+      ]
+    }
+  }
+];
+
 async function loadProducts() {
   try {
     const res = await fetch(`${SHOP_API_BASE}/api/products`);
     const rows = await res.json();
     // note: a few rows have no price at all (min_price null) — keep them,
     // they render as "Price on request" (see priceLabel)
-    PRODUCTS = rows.map(r => ({
+    const fetched = rows.map(r => ({
       id: r.product_code,
       name: prettyName(r.category, r.s_no, r.product_code),
       price: r.min_price,
@@ -103,13 +145,16 @@ async function loadProducts() {
       image: r.image_url,
       desc: '',
     }));
+    PRODUCTS = [...KIRA_PRODUCTS, ...fetched];
   } catch (err) {
     console.error('Failed to load products from shop API', err);
-    PRODUCTS = [];
+    PRODUCTS = [...KIRA_PRODUCTS];
   }
 }
 
 async function loadProductDetail(code) {
+  const local = KIRA_PRODUCTS.find(p => p.id === code || p.id.toLowerCase() === (code || '').toLowerCase());
+  if (local && local.details) return local.details;
   const res = await fetch(`${SHOP_API_BASE}/api/products/${encodeURIComponent(code)}`);
   if (!res.ok) return null;
   return res.json();
@@ -636,13 +681,16 @@ const PRODUCT_IMAGE_OVERRIDES = {
 function productImageUrl(product) {
   // Explicit override first
   if (PRODUCT_IMAGE_OVERRIDES[product.id]) return PRODUCT_IMAGE_OVERRIDES[product.id];
-  // Use real R2 image for metal chairs
+  if (product.id === 'KIRA' || (product.name && product.name.toLowerCase().includes('kira'))) {
+    return product.image || `${CHAIR_R2_BASE}/chair.png`;
+  }
+  if (product.image) return product.image;
+  // Use real R2 image for metal chairs if image is missing
   const cat = normCategory(product.category || '');
   if (cat.includes('metal') && cat.includes('chair')) {
     return `${CHAIR_R2_BASE}/chair.png`;
   }
-  // Product-specific image from API, or fallback
-  return product.image;
+  return 'assets/mark_slate.png';
 }
 
 function renderFilterBar() {

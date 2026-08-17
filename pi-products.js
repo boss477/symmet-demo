@@ -1,6 +1,24 @@
 /** Auto-generated from shop product catalogue — all purchasable variants. */
 export const PI_PRODUCTS = [
 {
+"code": "KIRA",
+"label": "KIRA Chair",
+"category": "METAL CHAIR",
+"size": "(W) 630 X (L) 450 X (H) 820 X (D) 590",
+"base": "R15 Metal Polish Auto-Return",
+"price": 20960,
+"image": "assets/chair.png"
+},
+{
+"code": "KIRA (SET)",
+"label": "KIRA Chairs Set",
+"category": "METAL CHAIR",
+"size": "(W) 630 X (L) 450 X (H) 820 X (D) 590",
+"base": "R15 Metal Polish Auto-Return",
+"price": 20960,
+"image": "assets/chairs.png"
+},
+{
 "code": "SMKAP S -001",
 "label": "Sofa Aria (1 Seater)",
 "category": "SOFA",
