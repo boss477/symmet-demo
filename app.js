@@ -429,11 +429,27 @@ function addToCart(product, qty = 1) {
   showToast(`"${product.name}" added to cart`);
 }
 
+function updateCartQty(id, delta) {
+  const item = cart.find(i => i.id === id);
+  if (!item) return;
+  item.qty += delta;
+  if (item.qty <= 0) {
+    removeFromCart(id);
+    return;
+  }
+  updateCartBadge();
+  updateCartFooter();
+  if (currentPage === 'checkout') renderCheckout();
+}
+
 function removeFromCart(id) {
+  const item = cart.find(i => i.id === id);
   cart = cart.filter(i => i.id !== id);
   updateCartBadge();
   renderCartItems();
   updateCartFooter();
+  if (currentPage === 'checkout') renderCheckout();
+  if (item) showToast(`"${item.name}" removed from cart`);
 }
 
 function renderCartItems() {
@@ -448,19 +464,26 @@ function renderCartItems() {
   list.innerHTML = cart.map(item => `
     <div class="cart-item">
       <div class="cart-item-thumb">
-        <img src="${item.image}" alt="" onerror="this.onerror=null;this.src='assets/mark_slate.png';">
+        <img src="${productImageUrl(item)}" alt="${item.name}" onerror="this.onerror=null;this.src='assets/mark_slate.png';">
       </div>
       <div class="cart-item-info">
         <div class="cart-item-name">${item.name}</div>
-        <div class="cart-item-meta">×${item.qty}</div>
+        <div class="cart-item-meta" style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+          <button class="cart-qty-btn" data-qty="${item.id}" data-delta="-1" style="width:22px;height:22px;background:rgba(27,37,56,.08);border:none;border-radius:4px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;justify-content:center;color:#1B2538;">−</button>
+          <span style="font-weight:600;min-width:14px;text-align:center;">${item.qty}</span>
+          <button class="cart-qty-btn" data-qty="${item.id}" data-delta="1" style="width:22px;height:22px;background:rgba(27,37,56,.08);border:none;border-radius:4px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;justify-content:center;color:#1B2538;">+</button>
+        </div>
       </div>
       <div class="cart-item-price">${fmt(item.price * item.qty)}</div>
-      <button class="cart-item-remove" data-remove="${item.id}" aria-label="Remove">&times;</button>
+      <button class="cart-item-remove" data-remove="${item.id}" title="Remove ${item.name}" aria-label="Remove">&times;</button>
     </div>
   `).join('');
 
   list.querySelectorAll('[data-remove]').forEach(btn => {
     btn.addEventListener('click', () => removeFromCart(btn.dataset.remove));
+  });
+  list.querySelectorAll('[data-qty]').forEach(btn => {
+    btn.addEventListener('click', () => updateCartQty(btn.dataset.qty, parseInt(btn.dataset.delta, 10)));
   });
 }
 
@@ -1087,62 +1110,48 @@ function renderCheckout() {
   const total = document.getElementById('summary-total');
   if (!items) return;
 
+  if (cart.length === 0) {
+    items.innerHTML = '<div style="padding:18px 0;color:rgba(27,37,56,.5);font-size:14px;">Your cart is empty. <a href="#" data-page="shop" style="text-decoration:underline;color:#405B72;font-weight:600;">Browse the shop</a></div>';
+    if (total) total.textContent = '₹0';
+    return;
+  }
+
   items.innerHTML = cart.map(c => `
-    <div class="summary-item">
-      <span>${c.name} ×${c.qty}</span>
-      <span>${fmt(c.price * c.qty)}</span>
+    <div class="summary-item" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid rgba(27,37,56,.08);">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+        <button class="checkout-item-remove" data-remove="${c.id}" title="Remove ${c.name}" aria-label="Remove" style="background:rgba(211,47,47,.08);color:#d32f2f;border:none;border-radius:4px;width:24px;height:24px;cursor:pointer;font-size:16px;line-height:1;display:inline-flex;align-items:center;justify-content:center;flex:none;transition:all .15s;">&times;</button>
+        <div style="min-width:0;">
+          <div style="font-weight:600;font-size:14px;color:#1B2538;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.name}</div>
+          <div style="font-size:12px;color:rgba(27,37,56,.6);display:flex;align-items:center;gap:6px;margin-top:3px;">
+            <span>Qty:</span>
+            <button class="checkout-qty-btn" data-qty="${c.id}" data-delta="-1" style="width:19px;height:19px;background:rgba(27,37,56,.08);border:none;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;color:#1B2538;">−</button>
+            <span style="font-weight:600;min-width:14px;text-align:center;">${c.qty}</span>
+            <button class="checkout-qty-btn" data-qty="${c.id}" data-delta="1" style="width:19px;height:19px;background:rgba(27,37,56,.08);border:none;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;color:#1B2538;">+</button>
+          </div>
+        </div>
+      </div>
+      <span style="font-weight:700;font-size:15px;color:#405B72;white-space:nowrap;">${fmt(c.price * c.qty)}</span>
     </div>
   `).join('');
 
-  total.textContent = fmt(cartTotal());
+  items.querySelectorAll('[data-remove]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      removeFromCart(btn.dataset.remove);
+    });
+  });
+  items.querySelectorAll('[data-qty]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      updateCartQty(btn.dataset.qty, parseInt(btn.dataset.delta, 10));
+    });
+  });
+
+  if (total) total.textContent = fmt(cartTotal());
 
   document.getElementById('order-success').style.display = 'none';
   document.getElementById('checkout-form-wrap').style.display = 'block';
 
   document.getElementById('place-order-btn').onclick = async () => {
     window.location.href = 'tel:+919818381951';
-    return;
-
-    const field = (id) => document.getElementById(id).value.trim();
-    const order = {
-      firstName: field('co-first'),
-      lastName: field('co-last'),
-      email: field('co-email'),
-      address: field('co-address'),
-      city: field('co-city'),
-      postcode: field('co-postcode'),
-      items: cart.map(c => ({ id: c.id, name: c.name, price: c.price, qty: c.qty })),
-      total: cartTotal(),
-    };
-    if (!order.firstName || !order.lastName || !order.email || !order.address || !order.city || !order.postcode) {
-      showToast('Fill in all shipping fields to place your order.');
-      return;
-    }
-
-    const btn = document.getElementById('place-order-btn');
-    btn.disabled = true;
-    btn.textContent = 'Placing order...';
-    try {
-      const res = await fetch(`${SHOP_API_BASE}/api/checkout`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(order),
-      });
-      if (!res.ok) throw new Error('checkout failed');
-      const { orderNo } = await res.json();
-      document.getElementById('order-no').textContent = orderNo;
-      document.getElementById('order-success').style.display = 'flex';
-      document.getElementById('checkout-form-wrap').style.display = 'none';
-      cart = [];
-      updateCartBadge();
-      updateCartFooter();
-    } catch (err) {
-      console.error('Failed to place order', err);
-      showToast('Could not place your order — please try again.');
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Place order';
-    }
   };
 }
 
