@@ -541,7 +541,6 @@
     </a>
     <div class="pi-header-actions">
       <button class="btn-secondary" id="btn-add-sample">Load Sample (Kira Chair)</button>
-      <button class="btn-secondary" onclick="window.print()">Print</button>
       <button class="btn-primary" id="btn-export-pdf">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Download Official PI (PDF)
@@ -1174,42 +1173,9 @@
       renderUI();
     });
 
-    // Export PDF
-    document.getElementById('btn-export-pdf').addEventListener('click', async () => {
-      const btn = document.getElementById('btn-export-pdf');
-      const origText = btn.innerHTML;
-      btn.innerHTML = 'Generating PDF...';
-      btn.disabled = true;
-
-      try {
-        await downloadSymmetPIPDF({
-          company: {
-            ...COMPANY_DEFAULTS,
-            contactPerson: document.getElementById('co-person').value,
-            contactMobile: document.getElementById('co-mobile').value,
-          },
-          customer: {
-            name: document.getElementById('cust-name').value,
-            contactPerson: document.getElementById('cust-person').value,
-            address: document.getElementById('cust-address').value,
-            mobile: document.getElementById('cust-mobile').value,
-            email: document.getElementById('cust-email').value
-          },
-          meta: {
-            piNumber: document.getElementById('pi-number').value,
-            revision: document.getElementById('pi-revision').value,
-            date: document.getElementById('pi-date').value
-          },
-          items: items,
-          options: options
-        });
-      } catch (err) {
-        console.error("PDF generation failed:", err);
-        alert("Could not generate PDF: " + err.message);
-      } finally {
-        btn.innerHTML = origText;
-        btn.disabled = false;
-      }
+    // Export PDF / Print function
+    document.getElementById('btn-export-pdf').addEventListener('click', () => {
+      window.print();
     });
 
     // Check if passed items via URL query params or localStorage
