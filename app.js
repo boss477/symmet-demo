@@ -623,6 +623,9 @@ function getFilteredProducts() {
   });
 }
 
+// R2 "chair" bucket — public dev URL
+const CHAIR_R2_BASE = 'https://pub-f39929fd39284c6a93de3bd82bfd6841.r2.dev';
+
 const PRODUCT_IMAGE_OVERRIDES = {
   'SMKAP LS 033': 'assets/lounge-granite.png',
   'SMKAP LS 024': 'assets/lounge-xanadu.png',
@@ -631,7 +634,15 @@ const PRODUCT_IMAGE_OVERRIDES = {
 };
 
 function productImageUrl(product) {
-  return PRODUCT_IMAGE_OVERRIDES[product.id] || product.image;
+  // Explicit override first
+  if (PRODUCT_IMAGE_OVERRIDES[product.id]) return PRODUCT_IMAGE_OVERRIDES[product.id];
+  // Use real R2 image for metal chairs
+  const cat = normCategory(product.category || '');
+  if (cat.includes('metal') && cat.includes('chair')) {
+    return `${CHAIR_R2_BASE}/chair.png`;
+  }
+  // Product-specific image from API, or fallback
+  return product.image;
 }
 
 function renderFilterBar() {
