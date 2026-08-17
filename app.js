@@ -90,23 +90,28 @@ function prettyName(category, s_no, product_code) {
 
 const KIRA_PRODUCTS = [
   {
-    id: 'KIRA',
-    name: 'KIRA Chair',
-    price: 20960,
-    maxPrice: 20960,
+    id: 'SMKIRA',
+    name: 'SMKIRA',
+    price: 23275,
+    originalPrice: 24500,
+    discount: 0.05,
+    maxPrice: 23275,
     category: 'METAL  CHAIR',
     image: 'https://pub-f39929fd39284c6a93de3bd82bfd6841.r2.dev/chair.png',
     desc: 'Commercial-grade metal dining & conference chair with auto-return swivel mechanism and precision metal polish base.',
     details: {
-      product_code: 'KIRA',
+      product_code: 'SMKIRA',
+      name: 'SMKIRA',
       category: 'METAL  CHAIR',
       variants: [
         {
-          code: 'KIRA',
+          code: 'SMKIRA',
           seater: 'Single Chair',
-          description: 'KIRA Metal Chair with auto-return swivel mechanism (W 63 × D 59 × H 82 cm).',
-          price: 20960,
-          display_price: 20960,
+          description: 'SMKIRA Metal Chair with auto-return swivel mechanism (W 63 × D 59 × H 82 cm).',
+          price: 24500,
+          discount: 0.05,
+          final_price: 23275,
+          display_price: 23275,
           size: 'W: 630 × L: 450 × H: 820 × D: 590 mm',
           length_mm: 630,
           width_or_diameter_mm: 450,
@@ -114,11 +119,13 @@ const KIRA_PRODUCTS = [
           base: 'R15 Metal Polish Auto-Return',
         },
         {
-          code: 'KIRA-SET',
+          code: 'SMKIRA-SET',
           seater: 'Set of Chairs',
-          description: 'KIRA Metal Chairs Set with matching finish and auto-return base.',
-          price: 20960,
-          display_price: 20960,
+          description: 'SMKIRA Metal Chairs Set with matching finish and auto-return base.',
+          price: 24500,
+          discount: 0.05,
+          final_price: 23275,
+          display_price: 23275,
           size: 'W: 630 × L: 450 × H: 820 × D: 590 mm',
           length_mm: 630,
           width_or_diameter_mm: 450,
@@ -153,7 +160,8 @@ async function loadProducts() {
 }
 
 async function loadProductDetail(code) {
-  const local = KIRA_PRODUCTS.find(p => p.id === code || p.id.toLowerCase() === (code || '').toLowerCase());
+  const c = (code || '').toUpperCase();
+  const local = KIRA_PRODUCTS.find(p => p.id === c || c.includes('KIRA') || c.includes('SMKIRA'));
   if (local && local.details) return local.details;
   const res = await fetch(`${SHOP_API_BASE}/api/products/${encodeURIComponent(code)}`);
   if (!res.ok) return null;
@@ -186,7 +194,14 @@ let currentPage = 'home';
 
 /* ---- HELPERS ---- */
 const fmt = (p) => `₹${(p ?? 0).toLocaleString()}`;
-const priceLabel = (p) => p.price != null ? fmt(p.price) : 'Price on request';
+const priceLabel = (p) => {
+  if (p.price == null) return 'Price on request';
+  if (p.originalPrice && p.discount) {
+    const pct = Math.round(p.discount * 100);
+    return `${fmt(p.price)} <span style="opacity:.45;text-decoration:line-through;font-size:.78em;font-weight:400;margin-left:4px">${fmt(p.originalPrice)}</span> <span style="font-size:.7em;color:#405B72;font-weight:700;margin-left:4px">${pct}% OFF</span>`;
+  }
+  return fmt(p.price);
+};
 const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 function showToast(msg) {
