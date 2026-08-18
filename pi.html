@@ -307,6 +307,43 @@
       padding: 2px 6px;
     }
 
+    /* Inline qty/price editing on placed items */
+    .item-edit-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+    .item-edit-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      color: var(--ink-muted);
+      font-weight: 600;
+    }
+    .item-edit-input {
+      width: 76px;
+      background: #FFF;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 3px 6px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 12px;
+      color: var(--ink);
+    }
+    .item-edit-input:focus {
+      outline: none;
+      border-color: var(--ink);
+    }
+    .item-line-total {
+      margin-left: auto;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
     /* Right Preview Document (Exact Sheet look) */
     .document-preview-wrap {
       display: flex;
@@ -931,16 +968,29 @@
         <div class="item-card-mini">
           <img src="${itm.imageUrl || 'assets/chairs.png'}" class="item-thumb-mini" alt="${itm.description}">
           <div class="item-meta-mini">
-            <div class="item-title-mini">${itm.description} (${itm.qty} units)</div>
+            <div class="item-title-mini">${itm.description}</div>
             <div class="item-sub-mini">${itm.size}</div>
-            <div class="item-sub-mini" style="font-weight:600;color:var(--ink);">${formatINR(itm.unitPrice * itm.qty)}</div>
+            <div class="item-edit-row">
+              <label class="item-edit-label">Qty
+                <input type="number" min="1" step="1" value="${itm.qty}" data-edit-qty="${idx}" class="item-edit-input">
+              </label>
+              <label class="item-edit-label">₹ / unit
+                <input type="number" min="0" step="100" value="${itm.unitPrice}" data-edit-price="${idx}" class="item-edit-input">
+              </label>
+              <span class="item-line-total">${formatINR((Number(itm.unitPrice) || 0) * (Number(itm.qty) || 1))}</span>
+            </div>
           </div>
           <button type="button" class="btn-del-item" data-idx="${idx}">&times;</button>
         </div>
       `).join('');
 
       document.getElementById('item-count-badge').textContent = `${items.length} ${items.length === 1 ? 'Item' : 'Items'}`;
+      renderSheet();
+    }
 
+    // Invoice sheet (table rows + totals) only — safe to call while the left
+    // list's inline inputs are focused.
+    function renderSheet() {
       // 2. Render Sheet Customer Meta
       document.getElementById('pv-cust-name').textContent = document.getElementById('cust-name').value || '—';
       document.getElementById('pv-cust-person').textContent = document.getElementById('cust-person').value || '—';
@@ -1128,6 +1178,27 @@
         items.splice(idx, 1);
         renderUI();
       }
+    });
+
+    // Inline price/qty editing: update state on every keystroke (totals only),
+    // full re-render on change/blur so focus isn't stolen mid-typing.
+    const itemsContainer = document.getElementById('items-list-container');
+    itemsContainer.addEventListener('input', (e) => {
+      const qtyEl = e.target.closest('[data-edit-qty]');
+      const priceEl = e.target.closest('[data-edit-price]');
+      if (!qtyEl && !priceEl) return;
+      const idx = Number((qtyEl || priceEl).dataset.editQty ?? (qtyEl || priceEl).dataset.editPrice);
+      const item = items[idx];
+      if (!item) return;
+      if (qtyEl) item.qty = Math.max(1, Number(qtyEl.value) || 1);
+      if (priceEl) item.unitPrice = Math.max(0, Number(priceEl.value) || 0);
+      // live line total on this card + full sheet totals, without rebuilding the list
+      const card = e.target.closest('.item-card-mini');
+      if (card) card.querySelector('.item-line-total').textContent = formatINR(item.unitPrice * item.qty);
+      renderSheet();
+    });
+    itemsContainer.addEventListener('change', (e) => {
+      if (e.target.matches('[data-edit-qty], [data-edit-price]')) renderUI();
     });
 
     // Load sample
