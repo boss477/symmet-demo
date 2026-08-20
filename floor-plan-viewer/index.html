@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Floor plan viewer</title>
+  <link rel="stylesheet" href="/src/styles/main.css" />
+</head>
+<body>
+  <!-- Upload overlay shown on first load -->
+  <div id="upload-overlay" class="upload-overlay">
+    <div class="upload-overlay__card">
+      <h1 class="upload-overlay__title">Floor Plan Viewer</h1>
+      <p class="upload-overlay__sub">Upload your floor plan image to get started</p>
+      <label class="upload-overlay__drop" id="upload-drop-zone">
+        <input type="file" id="upload-overlay-input" accept="image/*,application/pdf,.dxf,.dwg" style="display:none" />
+        <span class="upload-overlay__icon">&#128247;</span>
+        <span class="upload-overlay__label">Click to upload image or PDF</span>
+        <span class="upload-overlay__hint">PNG, JPG, SVG, PDF, DXF or DWG supported</span>
+      </label>
+      <div class="upload-overlay__divider"><span>or</span></div>
+      <label class="upload-overlay__cad-btn" id="upload-cad-label">
+        <input type="file" id="upload-overlay-cad" accept=".dxf,.dwg" style="display:none" />
+        Upload CAD (DXF/DWG)
+      </label>
+      <div class="upload-overlay__divider"><span>or</span></div>
+      <button type="button" id="upload-overlay-demo" class="upload-overlay__demo-btn">Try demo</button>
+    </div>
+  </div>
+
+  <div id="app">
+    <header class="bar" id="toolbar">
+      <div class="brand-lockup" aria-label="Symmet Stitch Design Kit">
+        <img src="/assets/wordmark_trim.png" alt="Symmet" />
+        <span>Floor plan studio</span>
+      </div>
+      <button type="button" class="theme-toggle" id="theme-toggle">Dark</button>
+    </header>
+    <main id="stage">
+      <aside id="catalog-drawer" class="catalog-drawer" hidden>
+        <div class="catalog-drawer__top">
+          <div class="catalog-tabs" role="tablist" aria-label="Catalog tabs">
+            <button type="button" class="catalog-tab catalog-tab--active" data-tab="add" role="tab" aria-selected="true">
+              Add
+            </button>
+            <button type="button" class="catalog-tab" data-tab="list" role="tab" aria-selected="false">
+              List
+            </button>
+            <button type="button" class="catalog-tab" data-tab="favorites" role="tab" aria-selected="false">
+              Favorites
+            </button>
+            <button type="button" class="catalog-tab" data-tab="gallery" role="tab" aria-selected="false">
+              Gallery
+            </button>
+          </div>
+          <button type="button" class="catalog-close" id="catalog-close" aria-label="Close catalog">
+            ✕
+          </button>
+        </div>
+
+        <div class="catalog-controls">
+          <div class="catalog-search">
+            <span class="catalog-search__icon" aria-hidden="true">🔎</span>
+            <input id="catalog-search" type="search" placeholder="Search…" autocomplete="off" />
+          </div>
+          <div class="catalog-filters">
+            <select id="catalog-room" aria-label="Room">
+              <option value="">All rooms</option>
+              <option value="living">Living room</option>
+              <option value="bedroom">Bedroom</option>
+              <option value="dining">Dining</option>
+              <option value="office">Office</option>
+            </select>
+            <select id="catalog-category" aria-label="Category">
+              <option value="">All categories</option>
+            </select>
+          </div>
+          <div id="catalog-chips" class="catalog-chips" aria-label="Quick categories"></div>
+        </div>
+
+        <div class="catalog-body">
+          <div id="catalog-grid" class="catalog-grid" aria-label="Catalog products"></div>
+          <div id="catalog-list" class="catalog-list" hidden></div>
+          <div id="catalog-gallery" class="catalog-gallery" hidden></div>
+        </div>
+      </aside>
+      <div id="viewport">
+        <div id="content">
+          <div class="plan-wrap" id="planWrap">
+            <img id="plan" alt="Floor plan" crossorigin="anonymous" />
+            <svg id="overlay" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"></svg>
+          </div>
+        </div>
+      </div>
+      <div id="viewport3d" style="display: none;">
+        <div id="view3d-hint">Click furniture to select</div>
+        <div id="view3d-side-panel" hidden></div>
+        <div id="view3d-chrome" hidden>
+          <div id="view3d-bar">
+            <button type="button" class="view3d-btn view3d-btn--active" id="btn3d-dollhouse" data-mode="dollhouse">
+              Dollhouse
+            </button>
+            <span class="view3d-sep"></span>
+            <button type="button" class="view3d-btn" id="btn3d-top" data-mode="top">
+              Top view
+            </button>
+            <span class="view3d-sep"></span>
+            <button type="button" class="view3d-btn" id="btn3d-side" data-mode="side">
+              Side views ▾
+            </button>
+            <span class="view3d-sep"></span>
+            <button type="button" class="view3d-btn" id="btn3d-move" data-mode="move">
+              Move
+            </button>
+            <span class="view3d-sep"></span>
+            <button type="button" class="view3d-btn" id="btn3d-path" title="Camera mini-map">Camera</button>
+            <span class="view3d-sep"></span>
+            <button type="button" class="view3d-btn" id="btn3d-snap" title="Download snapshot PNG">&#128247; Snap</button>
+            <select id="photoreal-style" class="view3d-btn" title="Render style">
+              <option value="realistic">Realistic (as is)</option>
+              <option value="modern">Modern</option>
+              <option value="italian">Italian</option>
+              <option value="warm">Warm &amp; Cozy</option>
+              <option value="scandinavian">Scandinavian</option>
+              <option value="luxury">Luxury Classic</option>
+            </select>
+            <button type="button" class="view3d-btn view3d-btn--snap" id="btn3d-photoreal" title="Generate photoreal render">&#10024; Photoreal</button>
+            <span class="view3d-sep"></span>
+            <button type="button" class="view3d-btn" id="btn3d-fullscreen" title="Toggle full screen">&#9974; Full screen</button>
+          </div>
+        </div>
+        <div id="view3d-minimap" hidden>
+          <div id="minimap-map">
+            <img id="minimap-img" alt="Plan mini-map" draggable="false">
+            <div id="minimap-cam" aria-hidden="true">
+              <span class="minimap-cam__body"></span>
+              <span class="minimap-cam__cone"></span>
+            </div>
+          </div>
+          <div id="minimap-height-wrap" title="Camera height">
+            <span class="minimap-height-icon">&#9650;</span>
+            <input type="range" id="minimap-height" min="6" max="60" value="16">
+            <span class="minimap-height-icon">&#9660;</span>
+          </div>
+        </div>
+      </div>
+    </main>
+    <div id="tip" role="tooltip" hidden></div>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

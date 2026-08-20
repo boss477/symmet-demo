@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Manufacturer Portal</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 1.5rem; }
+    .sku-note { color: #8a6d00; background: #fff7df; border: 1px solid #f0e3a8; padding: .4rem .6rem; border-radius: 6px; display: inline-block; font-size: .85rem; }
+    .sku-row { display: flex; flex-wrap: wrap; gap: 1rem; padding: .5rem; border-bottom: 1px solid #eee; }
+    .sku-cell { display: flex; flex-direction: column; min-width: 8rem; }
+    .sku-cell__label { font-size: .68rem; text-transform: uppercase; letter-spacing: .03em; color: #999; }
+    .sku-cell__value { font-size: .85rem; }
+  </style>
+</head>
+<body>
+  <h1>Manufacturer Portal — Shearling</h1>
+  <div id="portal-root"></div>
+  <script type="module" src="/src/manufacturer/main.js"></script>
+</body>
+</html>

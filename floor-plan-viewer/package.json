@@ -1,0 +1,50 @@
+{
+  "name": "floor-plan-viewer",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "npm run build && .venv\\Scripts\\python app.py",
+    "dev": "npm start",
+    "build": "vite build",
+    "preview": "vite preview",
+    "worker:dev": "wrangler dev --port 8787 --proxy 5173",
+    "deploy": "vite build && wrangler deploy",
+    "analyze-server": "node server.mjs",
+    "r2:upload": "node --env-file=.env scripts/upload-r2.mjs",
+    "r2:list": "node --env-file=.env scripts/upload-r2.mjs --list",
+    "plan2d:pipeline": "node --env-file=.env scripts/bake-and-upload-plan2d.mjs",
+    "plan2d:dry-run": "node --env-file=.env scripts/bake-and-upload-plan2d.mjs --dry-run",
+    "test:catalog-icons": "node --test scripts/catalog-icon-policy.test.mjs",
+    "test:catalog-adapt": "node --test scripts/catalog-adapt.test.mjs",
+    "test:furniture-item": "node --test scripts/furniture-item.test.mjs",
+    "test:sku-admin": "node --test scripts/sku-admin.test.mjs",
+    "test:share-link": "node --test scripts/share-link.test.mjs",
+    "test:regularize": "node --test scripts/regularize-analysis.test.mjs",
+    "test:plan-crop": "node --test scripts/plan-crop.test.mjs",
+    "test:plan3d-glb-scale": "node --test scripts/plan3d-glb-scale.test.mjs",
+    "glb:compress": "node scripts/compress-glb.mjs"
+  },
+  "dependencies": {
+    "@chenglou/pretext": "^0.0.7",
+    "@mlightcad/libredwg-web": "^0.7.7",
+    "@supabase/supabase-js": "^2.49.1",
+    "gsap": "^3.15.0",
+    "hono": "^4.6.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
+    "pptxgenjs": "^4.0.1",
+    "three": "^0.184.0",
+    "three-mesh-bvh": "^0.9.11"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-s3": "^3.787.0",
+    "@gltf-transform/core": "^4.4.0",
+    "@gltf-transform/extensions": "^4.4.0",
+    "@gltf-transform/functions": "^4.4.0",
+    "draco3d": "^1.5.7",
+    "playwright": "^1.60.0",
+    "pngjs": "^7.0.0",
+    "sharp": "^0.35.3",
+    "vite": "^6.3.5"
+  }
+}

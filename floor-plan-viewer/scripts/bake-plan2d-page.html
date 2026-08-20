@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Plan2D GLB bake</title>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "/vendor/three.module.js",
+        "three/addons/": "/vendor/addons/"
+      }
+    }
+  </script>
+</head>
+<body>
+<script type="module">
+  import * as THREE from "/vendor/three.module.js";
+  import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+
+  function scaleModel(model, wM, dM, hM) {
+    var box = new THREE.Box3().setFromObject(model);
+    var size = new THREE.Vector3();
+    box.getSize(size);
+    if (size.x < 1e-6 || size.y < 1e-6 || size.z < 1e-6) return model;
+    var scale = Math.min(wM / size.x, hM / size.y, dM / size.z);
+    model.scale.setScalar(scale);
+    box.setFromObject(model);
+    var center = new THREE.Vector3();
+    box.getCenter(center);
+    model.position.x -= center.x;
+    model.position.z -= center.z;
+    model.position.y -= box.min.y;
+    return model;
+  }
+
+  window.__bakeGlbTopDownPng = function (glbUrl, wM, dM, hM, sizePx) {
+    sizePx = sizePx || 512;
+    return new Promise(function (resolve, reject) {
+      var loader = new GLTFLoader();
+      loader.load(
+        glbUrl,
+        function (gltf) {
+          try {
+            var model = gltf.scene;
+            scaleModel(model, wM, dM, hM);
+            var scene = new THREE.Scene();
+            scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8a8a, 0.85));
+            var dir = new THREE.DirectionalLight(0xffffff, 0.9);
+            dir.position.set(3, 8, 2);
+            scene.add(dir);
+            scene.add(model);
+            var span = Math.max(wM, dM) * 1.2;
+            var camera = new THREE.OrthographicCamera(-span / 2, span / 2, span / 2, -span / 2, 0.05, 40);
+            camera.position.set(0, 12, 0);
+            camera.up.set(0, 0, -1);
+            camera.lookAt(0, 0, 0);
+            var renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
+            renderer.setSize(sizePx, sizePx);
+            renderer.setClearColor(0x000000, 0);
+            renderer.render(scene, camera);
+            resolve(renderer.domElement.toDataURL("image/png"));
+            renderer.dispose();
+          } catch (e) {
+            reject(e.message || String(e));
+          }
+        },
+        undefined,
+        function (err) {
+          reject(err && err.message ? err.message : String(err));
+        }
+      );
+    });
+  };
+</script>
+</body>
+</html>

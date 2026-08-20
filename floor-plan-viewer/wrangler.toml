@@ -1,0 +1,12 @@
+name = "planr-backend"
+main = "src/worker/index.js"
+compatibility_date = "2026-06-01"
+
+# R2 bucket for storing photoreal renders.
+# Env vars (set in Cloudflare dashboard or .dev.vars):
+#   QWEN_API_KEY
+#   R2_PUBLIC_BASE
+#   SUPABASE_SERVICE_ROLE_KEY
+[[r2_buckets]]
+binding = "RENDER_BUCKET"
+bucket_name = "sofa-3d"

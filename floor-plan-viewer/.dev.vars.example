@@ -1,0 +1,17 @@
+# .dev.vars.example
+# Copy this file to .dev.vars and fill in your actual development keys.
+# .dev.vars is automatically loaded by `wrangler dev` and is ignored by git.
+
+# Supabase Configuration
+VITE_SUPABASE_URL="https://your-project-id.supabase.co"
+SUPABASE_SERVICE_ROLE_KEY="eyJhbGci...your_secret_key"
+
+# AI Provider Keys
+GEMINI_API_KEY="AIzaSy..."
+QWEN_API_KEY="sk-..."
+
+# Cloudflare R2 Config
+R2_PUBLIC_BASE="https://pub-xxx.r2.dev"
+
+# Webhooks
+RAZORPAY_WEBHOOK_SECRET="your_razorpay_secret"

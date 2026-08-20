@@ -1,0 +1,308 @@
+{
+  "_comment": "Shared JS/Python fixtures for pointInPolygon + polygonArea (shoelace). Canonical impl: src/lib/geometry.js; Python transliteration: app.py. GENERATED FILE — do not edit by hand; regenerate with `node scripts/gen-geometry-fixtures.mjs`, which runs the canonical JS impl and records its output. For on-edge and on-vertex query points the result is implementation-defined (ray casting with strict < is not boundary-consistent) — these expectations lock the current behavior for parity, they are not mathematical truth. Run: node --test scripts/geometry.test.mjs AND pytest tests/test_geometry.py",
+  "cases": [
+    {
+      "name": "convex-square",
+      "polygon": [
+        {
+          "x": 0.2,
+          "y": 0.2
+        },
+        {
+          "x": 0.8,
+          "y": 0.2
+        },
+        {
+          "x": 0.8,
+          "y": 0.8
+        },
+        {
+          "x": 0.2,
+          "y": 0.8
+        }
+      ],
+      "area": 0.3600000000000001,
+      "queries": [
+        {
+          "x": 0.5,
+          "y": 0.5,
+          "inside": true
+        },
+        {
+          "x": 0.1,
+          "y": 0.5,
+          "inside": false
+        },
+        {
+          "x": 0.9,
+          "y": 0.5,
+          "inside": false
+        },
+        {
+          "x": 0.5,
+          "y": 0.1,
+          "inside": false
+        },
+        {
+          "x": 0.2,
+          "y": 0.5,
+          "inside": true
+        },
+        {
+          "x": 0.8,
+          "y": 0.5,
+          "inside": false
+        },
+        {
+          "x": 0.5,
+          "y": 0.2,
+          "inside": true
+        },
+        {
+          "x": 0.2,
+          "y": 0.2,
+          "inside": true
+        }
+      ]
+    },
+    {
+      "name": "concave-L-shape",
+      "polygon": [
+        {
+          "x": 0.1,
+          "y": 0.1
+        },
+        {
+          "x": 0.6,
+          "y": 0.1
+        },
+        {
+          "x": 0.6,
+          "y": 0.4
+        },
+        {
+          "x": 0.3,
+          "y": 0.4
+        },
+        {
+          "x": 0.3,
+          "y": 0.7
+        },
+        {
+          "x": 0.1,
+          "y": 0.7
+        }
+      ],
+      "area": 0.21,
+      "queries": [
+        {
+          "x": 0.2,
+          "y": 0.2,
+          "inside": true
+        },
+        {
+          "x": 0.5,
+          "y": 0.2,
+          "inside": true
+        },
+        {
+          "x": 0.2,
+          "y": 0.6,
+          "inside": true
+        },
+        {
+          "x": 0.5,
+          "y": 0.6,
+          "inside": false
+        },
+        {
+          "x": 0.3,
+          "y": 0.55,
+          "inside": false
+        }
+      ]
+    },
+    {
+      "name": "triangle",
+      "polygon": [
+        {
+          "x": 0.5,
+          "y": 0.1
+        },
+        {
+          "x": 0.9,
+          "y": 0.9
+        },
+        {
+          "x": 0.1,
+          "y": 0.9
+        }
+      ],
+      "area": 0.32000000000000006,
+      "queries": [
+        {
+          "x": 0.5,
+          "y": 0.5,
+          "inside": true
+        },
+        {
+          "x": 0.15,
+          "y": 0.2,
+          "inside": false
+        },
+        {
+          "x": 0.5,
+          "y": 0.1,
+          "inside": false
+        },
+        {
+          "x": 0.5,
+          "y": 0.9,
+          "inside": false
+        }
+      ]
+    },
+    {
+      "name": "degenerate-empty",
+      "polygon": [],
+      "area": 0,
+      "queries": [
+        {
+          "x": 0.5,
+          "y": 0.5,
+          "inside": false
+        }
+      ]
+    },
+    {
+      "name": "degenerate-one-point",
+      "polygon": [
+        {
+          "x": 0.5,
+          "y": 0.5
+        }
+      ],
+      "area": 0,
+      "queries": [
+        {
+          "x": 0.5,
+          "y": 0.5,
+          "inside": false
+        }
+      ]
+    },
+    {
+      "name": "degenerate-two-points",
+      "polygon": [
+        {
+          "x": 0.2,
+          "y": 0.2
+        },
+        {
+          "x": 0.8,
+          "y": 0.8
+        }
+      ],
+      "area": 0,
+      "queries": [
+        {
+          "x": 0.5,
+          "y": 0.5,
+          "inside": false
+        },
+        {
+          "x": 0.2,
+          "y": 0.2,
+          "inside": false
+        }
+      ]
+    },
+    {
+      "name": "horizontal-edge-pentagon",
+      "polygon": [
+        {
+          "x": 0.1,
+          "y": 0.3
+        },
+        {
+          "x": 0.9,
+          "y": 0.3
+        },
+        {
+          "x": 0.9,
+          "y": 0.7
+        },
+        {
+          "x": 0.5,
+          "y": 0.9
+        },
+        {
+          "x": 0.1,
+          "y": 0.7
+        }
+      ],
+      "area": 0.4,
+      "queries": [
+        {
+          "x": 0.5,
+          "y": 0.5,
+          "inside": true
+        },
+        {
+          "x": 0.5,
+          "y": 0.2,
+          "inside": false
+        },
+        {
+          "x": 0.5,
+          "y": 0.3,
+          "inside": true
+        },
+        {
+          "x": 0.05,
+          "y": 0.3,
+          "inside": false
+        },
+        {
+          "x": 0.5,
+          "y": 0.85,
+          "inside": true
+        }
+      ]
+    },
+    {
+      "name": "square-ccw-winding",
+      "polygon": [
+        {
+          "x": 0.2,
+          "y": 0.8
+        },
+        {
+          "x": 0.8,
+          "y": 0.8
+        },
+        {
+          "x": 0.8,
+          "y": 0.2
+        },
+        {
+          "x": 0.2,
+          "y": 0.2
+        }
+      ],
+      "area": 0.3600000000000001,
+      "queries": [
+        {
+          "x": 0.5,
+          "y": 0.5,
+          "inside": true
+        },
+        {
+          "x": 0.1,
+          "y": 0.5,
+          "inside": false
+        }
+      ]
+    }
+  ]
+}

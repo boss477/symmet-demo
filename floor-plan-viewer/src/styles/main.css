@@ -1,0 +1,176 @@
+@import "./tokens.css";
+@import "./viewer.css";
+@import "./tooltip.css";
+
+@font-face {
+  font-family: "Forum";
+  src: url("/assets/fonts/Forum-Regular.ttf") format("truetype");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Neue Machina";
+  src: url("/assets/fonts/NeueMachina-Ultrabold.ttf") format("truetype");
+  font-display: swap;
+}
+
+:root {
+  --brand-ink: #1f2522;
+  --brand-muted: #6f756d;
+  --brand-paper: #f4f1e9;
+  --brand-panel: #fffdf8;
+  --brand-line: #dcd8ce;
+  --brand-accent: #bb5b39;
+  --brand-accent-strong: #923d25;
+  --brand-green: #28463d;
+  --brand-shadow: 0 18px 50px rgba(54, 48, 38, 0.12);
+  --brand-radius: 12px;
+  --brand-pill: 999px;
+  --ink: var(--brand-ink);
+  --bar-bg: var(--brand-panel);
+  --bar-border: var(--brand-line);
+  --stage-bg: var(--brand-paper);
+  --viewport-bg: #e8e3d9;
+  --plan-chrome: var(--brand-panel);
+}
+
+:root[data-theme="dark"] {
+  --brand-ink: #f1eee5;
+  --brand-muted: #aab7ad;
+  --brand-paper: #17231f;
+  --brand-panel: #20322c;
+  --brand-line: #3d5b50;
+  --brand-accent: #e6c66d;
+  --brand-accent-strong: #f0d98c;
+  --brand-green: #0f1916;
+  --brand-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+  --ink: var(--brand-ink);
+  --bar-bg: var(--brand-panel);
+  --bar-border: var(--brand-line);
+  --stage-bg: var(--brand-paper);
+  --viewport-bg: #30443d;
+  --plan-chrome: var(--brand-panel);
+}
+
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  margin: 0;
+  font-family: "Forum", Georgia, serif;
+  color: var(--brand-ink);
+  background: var(--brand-paper);
+  transition: background-color .2s ease, color .2s ease;
+}
+button, input, select { font-family: "Neue Machina", "Trebuchet MS", sans-serif; }
+
+#app { min-height: 100vh; display: flex; flex-direction: column; }
+#toolbar {
+  min-height: 72px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  background: var(--brand-panel);
+  border-bottom: 1px solid var(--brand-line);
+  box-shadow: 0 8px 28px rgba(30, 32, 28, .08);
+  z-index: 30;
+}
+#toolbar > .toolbar-row { width: auto; }
+.brand-lockup { display: inline-flex; align-items: center; gap: 10px; margin-right: 8px; }
+.brand-lockup img { width: 104px; height: auto; display: block; }
+.brand-lockup span { color: var(--brand-muted); font-size: 12px; letter-spacing: .04em; }
+.theme-toggle {
+  margin-left: auto;
+  padding: 8px 14px;
+  border: 1px solid var(--brand-line);
+  border-radius: var(--brand-pill);
+  color: var(--brand-ink);
+  background: transparent;
+}
+.theme-toggle:hover { color: var(--brand-panel); background: var(--brand-ink); }
+
+.bar.bar--stacked { flex-direction: row; align-items: center; gap: 10px; }
+.toolbar-row { width: auto; gap: 8px; }
+.toolbar-row--file, .toolbar-row--geometry { flex: 1 1 auto; }
+.toolbar-row--furniture { flex-basis: 100%; order: 5; border-top: 1px solid var(--brand-line); padding-top: 8px; }
+.toolbar-group-label { color: var(--brand-muted); font-family: "Neue Machina", sans-serif; }
+.toolbar-command-group { display: inline-flex; align-items: center; gap: 6px; padding-right: 10px; border-right: 1px solid var(--brand-line); }
+.toolbar-command-group:last-child { border-right: 0; padding-right: 0; }
+.toolbar-command-group__label { color: var(--brand-muted); font: 10px/1 "Neue Machina", sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+.share-controls { display: inline-flex; align-items: center; gap: 6px; padding-left: 4px; }
+.btn, button, select, input {
+  border: 1px solid var(--brand-line);
+  border-radius: var(--brand-pill);
+  background: var(--brand-panel);
+  color: var(--brand-ink);
+}
+.btn, button { padding: 8px 12px; }
+button:hover, .btn:hover { background: var(--brand-ink); color: var(--brand-panel); }
+button.tool-active, .sku-filter-btn--active { background: var(--brand-accent); border-color: var(--brand-accent); color: #fffdf8; }
+
+#stage {
+  flex: 1;
+  min-height: calc(100vh - 72px);
+  height: auto;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: minmax(240px, 25%) minmax(0, 75%);
+  gap: 14px;
+  background: radial-gradient(circle at 100% 0%, rgba(187, 91, 57, .08), transparent 28%), var(--brand-paper);
+}
+#catalog-drawer {
+  position: relative;
+  inset: auto;
+  grid-column: 1;
+  grid-row: 1;
+  width: auto;
+  height: 100%;
+  min-width: 0;
+  border: 1px solid var(--brand-line);
+  border-radius: var(--brand-radius);
+  background: var(--brand-panel);
+  box-shadow: var(--brand-shadow);
+  overflow: hidden;
+  z-index: 10;
+}
+#catalog-drawer[hidden] { display: block; }
+.catalog-drawer__top { padding: 14px; border-bottom: 1px solid var(--brand-line); }
+.catalog-controls { padding: 12px; }
+.catalog-search input, .catalog-filters select { border-radius: 8px; background: transparent; }
+.catalog-grid { grid-template-columns: 1fr; gap: 10px; padding: 0 12px 12px; }
+.catalog-card { border: 1px solid var(--brand-line); border-radius: 10px; background: transparent; overflow: hidden; }
+.catalog-card__body { padding: 10px; }
+
+#viewport, #viewport3d {
+  grid-column: 2;
+  grid-row: 1;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  border: 1px solid var(--brand-line);
+  border-radius: var(--brand-radius);
+  background: var(--viewport-bg);
+  box-shadow: var(--brand-shadow);
+}
+#viewport3d { position: relative; }
+#content, .plan-wrap { width: 100%; height: 100%; }
+
+.upload-overlay { background: rgba(23, 35, 31, .68); backdrop-filter: blur(8px); }
+.upload-overlay__card { border: 1px solid var(--brand-line); border-radius: var(--brand-radius); background: var(--brand-panel); box-shadow: var(--brand-shadow); }
+.upload-overlay__title { font-family: "Forum", Georgia, serif; font-size: 2rem; color: var(--brand-ink); }
+.upload-overlay__demo-btn, .upload-overlay__cad-btn { border-radius: var(--brand-pill); }
+
+@media (max-width: 900px) {
+  #toolbar, .bar.bar--stacked { align-items: stretch; }
+  .brand-lockup { margin-right: 0; }
+  .theme-toggle { margin-left: 0; align-self: flex-start; }
+  #stage { grid-template-columns: 1fr; grid-template-rows: minmax(250px, 40vh) minmax(420px, 1fr); }
+  #catalog-drawer, #viewport, #viewport3d { grid-column: 1; }
+  #catalog-drawer { grid-row: 1; }
+  #viewport, #viewport3d { grid-row: 2; }
+}
+
+body.readonly-share #toolbar { display: none; }
+body.readonly-share .share-controls { display: none; }

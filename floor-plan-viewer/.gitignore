@@ -1,0 +1,13 @@
+node_modules/
+.venv/
+dist/
+.env
+.env.local
+.dev.vars
+.wrangler/
+.r2-backup/
+lm_studio.local.json
+.DS_Store
+
+scripts/.plan2d-out/
+.codegraph/

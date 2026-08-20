@@ -1,0 +1,202 @@
+<title>Floor Plan Viewer — How It Works (Demo Guide)</title>
+<style>
+:root{
+  --bg:#0f1117;--surface:#1a1d2e;--surface2:#232640;--border:#2e3158;
+  --accent:#6c63ff;--accent2:#00d4aa;--text:#e8eaf6;--muted:#a8adc4;--code-bg:#13141f;
+}
+@media (prefers-color-scheme: light){
+  :root{--bg:#f7f7fb;--surface:#ffffff;--surface2:#f0f0f8;--border:#dcdce6;
+    --accent:#5548d9;--accent2:#0a8f74;--text:#1b1d2b;--muted:#5b5f77;--code-bg:#f0f0f6;}
+}
+:root[data-theme="dark"]{--bg:#0f1117;--surface:#1a1d2e;--surface2:#232640;--border:#2e3158;
+  --accent:#6c63ff;--accent2:#00d4aa;--text:#e8eaf6;--muted:#a8adc4;--code-bg:#13141f;}
+:root[data-theme="light"]{--bg:#f7f7fb;--surface:#ffffff;--surface2:#f0f0f8;--border:#dcdce6;
+  --accent:#5548d9;--accent2:#0a8f74;--text:#1b1d2b;--muted:#5b5f77;--code-bg:#f0f0f6;}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;
+  font-size:15px;line-height:1.65;margin:0}
+.wrap{max-width:980px;margin:0 auto;padding:40px 24px 100px}
+h1{font-size:1.9rem;font-weight:800;margin:0 0 6px}
+h1 + p{color:var(--muted);margin-top:0}
+h2{font-size:1.35rem;font-weight:700;margin:44px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--border);color:var(--text)}
+h3{font-size:1.05rem;font-weight:700;margin:22px 0 6px;color:var(--accent)}
+h4{font-family:'Cascadia Code',monospace;font-size:.92rem;font-weight:700;margin:14px 0 3px;color:var(--accent2)}
+p{color:var(--muted);margin:6px 0}
+code{font-family:'Cascadia Code',monospace;font-size:.85em;background:var(--code-bg);
+  padding:1px 6px;border-radius:4px;color:var(--accent2)}
+ol,ul{color:var(--muted);padding-left:22px}
+li{margin:6px 0}
+li b{color:var(--text)}
+.step{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--accent);
+  border-radius:8px;padding:14px 18px;margin:10px 0}
+.step .n{color:var(--accent);font-weight:800;font-family:monospace;margin-right:8px}
+.file{background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:10px 16px;margin:8px 0}
+.file p{margin:4px 0 0}
+.note{background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  padding:12px 16px;margin:14px 0;font-size:.92rem}
+.note b{color:var(--accent2)}
+.demo{background:var(--surface2);border:1px solid var(--accent2);border-radius:10px;
+  padding:16px 20px;margin:16px 0}
+.demo h3{margin-top:0;color:var(--accent2)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:700px){.grid{grid-template-columns:1fr}}
+.toc{columns:2;column-gap:30px;font-size:.9rem}
+.toc a{color:var(--muted);text-decoration:none;display:block;padding:2px 0}
+.toc a:hover{color:var(--accent)}
+@media (max-width:700px){.toc{columns:1}}
+hr{border:none;border-top:1px solid var(--border);margin:30px 0}
+table{width:100%;border-collapse:collapse;font-size:.88rem;margin:10px 0}
+th{text-align:left;color:var(--accent);padding:8px 10px;border-bottom:2px solid var(--border);font-size:.8rem;text-transform:uppercase}
+td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--muted);vertical-align:top}
+td:first-child{font-family:monospace;color:var(--accent2);white-space:nowrap}
+</style>
+
+<div class="wrap">
+
+<h1>Floor Plan Viewer — How It Works</h1>
+<p>A working reference for demo prep. No diagrams — just what happens, in order, and what each file is responsible for. Verified against the actual code in <code>c:\STARTUP\floor-plan-viewer</code> on 2026-07-12.</p>
+
+<div class="toc">
+<a href="#flow">1. The end-to-end flow</a>
+<a href="#demo">2. Suggested demo script</a>
+<a href="#upload">3. Upload layer</a>
+<a href="#vision">4. Vision AI (room detection)</a>
+<a href="#coords">5. Coordinates &amp; calibration</a>
+<a href="#catalog">6. Catalog system</a>
+<a href="#furniture">7. Furniture lifecycle</a>
+<a href="#viewer2d">8. 2D viewer / rendering</a>
+<a href="#viewer3d">9. 3D viewer</a>
+<a href="#billing">10. Pricing, BOQ, deck export</a>
+<a href="#share">11. Save / share / gallery</a>
+<a href="#server">12. Servers &amp; deployment</a>
+<a href="#scripts">13. Dev/admin scripts</a>
+<a href="#gaps">14. Known gaps to be aware of</a>
+</div>
+
+<hr/>
+
+<h2 id="flow">1. The end-to-end flow</h2>
+<p>Everything is wired through one file, <code>src/viewer/floorPlanViewer.js</code> — it's the "god module" that owns all state and imports every other module. Nothing else talks to anything else directly; they all report back to this controller through callbacks.</p>
+
+<div class="step"><span class="n">1</span><b>Upload.</b> User drops an image/PDF/CAD file → <code>uploadDropzone.js</code> detects the type → loads it into the <code>&lt;img id="plan"&gt;</code> element.</div>
+<div class="step"><span class="n">2</span><b>Analyze.</b> User clicks "Analyze" → <code>services/vision.js</code> sends the image to an AI vision model (Kimi / Gemini / local LM Studio) → gets back JSON: rooms, walls, doors, a calibration hint.</div>
+<div class="step"><span class="n">3</span><b>Calibrate.</b> <code>lib/calibration.js</code> converts the AI's guess (or a user-drawn reference line) into real-world <code>mmPerPixel</code>, so every measurement downstream is in actual millimeters.</div>
+<div class="step"><span class="n">4</span><b>Load catalog.</b> <code>services/supabase.js</code> fetches the furniture catalog table from Supabase; <code>lib/catalog.js</code> normalizes messy DB columns into a clean shape; falls back to <code>lib/planFurniturePresets.js</code> if Supabase is unreachable.</div>
+<div class="step"><span class="n">5</span><b>Place furniture.</b> User drags an item from the catalog drawer onto the plan → <code>lib/furnitureItem.js</code> creates it → <code>lib/catalogSizing.js</code> sizes it in real mm → <code>lib/furnitureBounds.js</code> keeps it inside the room polygon → optionally <code>lib/vastuPlacement.js</code> snaps it to the correct Vastu compass zone.</div>
+<div class="step"><span class="n">6</span><b>Render.</b> <code>viewer/planCanvas.js</code> + <code>viewer/furnitureLayer.js</code> draw everything as SVG on top of the plan image, in real time as things move.</div>
+<div class="step"><span class="n">7</span><b>Price it.</b> Every placed item that's added to the "bag" flows into <code>lib/boqExport.js</code>, which builds priced rows (using Supabase price or the <code>lib/catalogPrices.js</code> fallback table) → <code>viewer/billBar.js</code> shows a running total strip.</div>
+<div class="step"><span class="n">8</span><b>Go 3D.</b> Same room/wall/furniture data is handed to <code>viewer/plan3dViewer.js</code>, which extrudes walls, loads real GLB furniture models from Cloudflare R2, and lets the user walk/orbit the space.</div>
+<div class="step"><span class="n">9</span><b>Photoreal.</b> From the 3D view, a screenshot is POSTed to <code>/api/photoreal</code> (a Cloudflare Pages Function) which calls an image-gen model and returns a realistic render.</div>
+<div class="step"><span class="n">10</span><b>Export / share.</b> Download BOQ as PDF/CSV, download a full design deck (PPTX), or generate a share link / publish to the public gallery.</div>
+
+<h2 id="demo">2. Suggested demo script</h2>
+<div class="demo">
+<h3>~5 minute walkthrough</h3>
+<ol>
+<li>Upload a floor plan image → click <b>Analyze</b> → point out the AI-detected rooms/walls appearing as an overlay.</li>
+<li>Draw a calibration line on a known wall (or accept the AI's guess) → mention this is what makes furniture sizes "real mm", not guesses.</li>
+<li>Open the catalog drawer → drag a sofa into a room → show it snapping inside the room boundary and let it auto-suggest a Vastu-correct position.</li>
+<li>Rotate/replace/duplicate the item using the floating furniture toolbar.</li>
+<li>Add 2–3 items to the bag → show the bill bar total updating live → open the full BOQ summary.</li>
+<li>Switch to 3D → orbit the room, show the real GLB furniture models and wall extrusion.</li>
+<li>Trigger a photoreal render from the 3D view.</li>
+<li>Download the BOQ PDF and/or the design deck PPTX.</li>
+<li>Generate a share link, open it in a new tab to show the read-only public view.</li>
+</ol>
+</div>
+
+<h2 id="upload">3. Upload layer</h2>
+<div class="file"><h4>src/upload/uploadDropzone.js</h4><p>Binds drag-drop and the hidden file input. Sniffs MIME type: image passes straight through, PDF and CAD get routed to the pickers below. Calls back to the controller with a <code>File</code>.</p></div>
+<div class="file"><h4>src/upload/pdfImagePicker.js</h4><p>Renders every page of a dropped PDF to canvas via PDF.js, shows a thumbnail picker modal, returns the chosen page as a PNG data URL — downstream code never knows it came from a PDF.</p></div>
+<div class="file"><h4>src/upload/cadImagePicker.js</h4><p>Rasterizes a CAD/DXF file to a PNG data URL the same way.</p></div>
+
+<h2 id="vision">4. Vision AI (room detection)</h2>
+<div class="file"><h4>src/services/vision.js</h4><p><code>fileToImageBase64()</code> downsizes the image to ≤1920px before sending (keeps API cost/latency down). <code>analyzeFloorPlan()</code> routes to whichever provider is configured — Kimi (Fireworks), Gemini, or a local LM Studio instance proxied through the Flask dev server at <code>/api/analyze</code>.</p></div>
+<div class="file"><h4>src/lib/visionPrompt.js</h4><p>The system prompt — defines the exact JSON schema the model must return (rooms, walls, doors, calibration).</p></div>
+<div class="file"><h4>src/lib/jsonRepair.js</h4><p>AI responses get truncated or malformed sometimes; this patches unclosed brackets/trailing commas before parsing.</p></div>
+<div class="file"><h4>src/lib/analysisValidation.js</h4><p>Validates the repaired JSON actually has the expected shape before the app trusts it.</p></div>
+
+<h2 id="coords">5. Coordinates &amp; calibration</h2>
+<p>Everything is stored in <b>normalized 0–1 space</b> relative to the image, not raw pixels — this is what lets zoom/pan/3D all share the same data.</p>
+<div class="file"><h4>src/lib/coordinates.js</h4><p>The image uses <code>object-fit:contain</code>, so there are letterbox bars around it. <code>clientToNormalized()</code> accounts for that when converting a mouse click to 0–1 space. <code>normToWorld()</code> converts further into Three.js world coordinates for the 3D view.</p></div>
+<div class="file"><h4>src/lib/calibration.js</h4><p>Turns a calibration line (user-drawn or AI-guessed) into <code>mmPerPixel</code> — the single number that lets furniture sizes be expressed in real millimeters everywhere else in the app.</p></div>
+<div class="file"><h4>src/lib/geometry.js</h4><p>Pure math: <code>pointInPolygon</code>, <code>polygonArea</code>, bounding boxes. Used for room hit-testing and furniture containment. Has a matching Python implementation in <code>app.py</code> kept in lockstep via <code>scripts/geometry.test.mjs</code> + <code>tests/test_geometry.py</code>.</p></div>
+
+<h2 id="catalog">6. Catalog system</h2>
+<div class="file"><h4>src/services/supabase.js</h4><p>Supabase client singleton. Reads <code>shearling_catalog</code> (anon read-only table) and a <code>projects</code> table for save/share. Also handles uploading plan images to Supabase storage.</p></div>
+<div class="file"><h4>src/lib/catalog.js</h4><p>Adapter: turns messy raw Supabase rows (columns like <code>"Product Code"</code> with spaces) into one canonical <code>CatalogEntry</code> shape. Builds a fast lookup index.</p></div>
+<div class="file"><h4>src/lib/catalogSizing.js</h4><p>Answers "how big is this on the plan?" — writes real-world width/depth onto a furniture item from calibration + catalog data.</p></div>
+<div class="file"><h4>src/lib/catalogPrices.js</h4><p>Hardcoded fallback price table (from the "Shearling Moulded Chair Catalogue 2024-2025"), keyed by product code. Used when a Supabase row has no price — so the bill never shows ₹0 for a known SKU.</p></div>
+<div class="file"><h4>src/lib/sofaColors.js</h4><p>Upholstery color options and parsing of raw catalog color text into selectable color IDs.</p></div>
+<div class="file"><h4>src/lib/planFurniturePresets.js</h4><p>Built-in default catalog used when Supabase is unreachable, so the app still works offline/in a demo with no DB.</p></div>
+
+<h2 id="furniture">7. Furniture lifecycle</h2>
+<p>A furniture item is a plain object living in <code>data.furniture[]</code> — position, rotation, scale, catalog link, color override, real-world mm dimensions.</p>
+<div class="file"><h4>src/lib/furnitureItem.js</h4><p><code>create()</code> births a new item with defaults. <code>isSofa()</code>, <code>isColorable()</code>, <code>resolveColorId()</code> answer type-specific questions used all over the UI.</p></div>
+<div class="file"><h4>src/lib/furnitureBounds.js</h4><p>Keeps furniture inside its room polygon as it's dragged; clamps and nudges position.</p></div>
+<div class="file"><h4>src/lib/wallSnap.js</h4><p>Snaps an item flush against the nearest wall (for wardrobes, TV units, etc).</p></div>
+<div class="file"><h4>src/lib/vastuPlacement.js</h4><p>Maps furniture type → correct Vastu compass zone within a room → a target position, and resolves overlaps if two items land in the same zone.</p></div>
+<div class="file"><h4>src/viewer/roomAutoStage.js</h4><p>Auto-fills empty rooms with sensible preset furniture (e.g. bedroom gets a bed + wardrobe) so a demo plan doesn't have to be furnished by hand.</p></div>
+<div class="file"><h4>src/lib/undoStack.js</h4><p>Ring-buffer undo/redo, capped at 50 entries.</p></div>
+
+<h2 id="viewer2d">8. 2D viewer / rendering</h2>
+<div class="file"><h4>src/viewer/planCanvas.js / svgRenderer.js</h4><p>Draw rooms, walls, and labels as SVG on top of the plan image. <code>svgRenderer</code> is the same logic reused for file export.</p></div>
+<div class="file"><h4>src/viewer/furnitureLayer.js, furniture2dRender.js, furnitureShapes.js</h4><p>Draws every placed furniture item — <code>furnitureShapes.js</code> holds the actual SVG path definitions per furniture type (sofa, bed, table, plant, etc).</p></div>
+<div class="file"><h4>src/viewer/richFurnitureIcons.js, glbTopDownBake.js</h4><p>For catalog items that have a real 3D model, bakes a top-down photorealistic PNG from the GLB (via an offscreen Three.js renderer) and caches it, instead of using a generic icon shape.</p></div>
+<div class="file"><h4>src/viewer/realistic2dCanvas.js</h4><p>An alternate photorealistic 2D textured render mode for the plan.</p></div>
+<div class="file"><h4>src/viewer/doorLayer.js, roomOverlay.js, tooltip.js</h4><p>Door swing arcs, room fill/highlight colors, and hover tooltips showing room name/area.</p></div>
+<div class="file"><h4>src/viewer/toolbar.js, catalogDrawer.js, furnitureToolbar.js, furnitureSelection.js</h4><p>Top toolbar (file/geometry tools), the slide-in catalog panel with search, and the floating per-item action bar (rotate/replace/copy/remove/add-to-bag).</p></div>
+<div class="file"><h4>src/viewer/geometryEditor.js, planTools.js, geometryOverlays.js</h4><p>Manual room/wall drawing and vertex editing when the AI detection needs correcting, plus measurement tools.</p></div>
+
+<h2 id="viewer3d">9. 3D viewer</h2>
+<div class="file"><h4>src/viewer/plan3dViewer.js</h4><p>The 3D orchestrator — sets up the Three.js scene and animation loop, ties together every module below.</p></div>
+<div class="file"><h4>plan3dElevation.js, plan3dGlb.js, plan3dMaterials.js, plan3dLighting.js, plan3dEnvironment.js</h4><p>Extrudes 2D walls into 3D meshes; loads <code>.glb</code> furniture models from Cloudflare R2; sets up PBR materials (fabric/wood/glass/floor), lighting, and an HDRI environment for reflections.</p></div>
+<div class="file"><h4>plan3dCamera.js, plan3dInteraction.js, plan3dMove.js</h4><p>Camera fly-to/orbit/minimap; click-to-select furniture and rooms via raycasting; drag furniture across the floor plane.</p></div>
+<div class="file"><h4>plan3dWallPaint.js, plan3dMeasure.js, plan3dMeasureOverlay.js</h4><p>Wall color picker in 3D, and a tape-measure tool (click two points → real-world distance, shown as a CSS overlay on the WebGL canvas).</p></div>
+<div class="file"><h4>plan3dSnapshot.js</h4><p>Captures a screenshot of the current 3D view and POSTs it to <code>/api/photoreal</code> to get back an AI-generated realistic render. In local dev this endpoint doesn't exist unless <code>VITE_PHOTOREAL_URL</code> is set — the Flask route was deliberately removed so there's a single implementation, the Cloudflare Pages Function.</p></div>
+
+<h2 id="billing">10. Pricing, BOQ, deck export</h2>
+<div class="file"><h4>src/lib/boqExport.js</h4><p><code>buildBoqRows()</code> turns bagged furniture into priced rows (qty, dims, unit price, GST); <code>downloadBoqPdf()</code> / <code>downloadBoqCsv()</code> export it.</p></div>
+<div class="file"><h4>src/viewer/billBar.js</h4><p>The IKEA-style running total strip, expandable into a full cost summary panel.</p></div>
+<div class="file"><h4>src/lib/deckExport.js</h4><p>Builds a full design-deck PPTX client-side (using <code>pptxgenjs</code>) — no server round-trip needed.</p></div>
+<div class="file"><h4>src/lib/planThumbnail.js</h4><p>Captures the current plan as a thumbnail image, used for save/share previews and the gallery.</p></div>
+
+<h2 id="share">11. Save / share / gallery</h2>
+<div class="file"><h4>src/services/projectShare.js</h4><p>Save/load/publish a project via the Supabase <code>projects</code> table.</p></div>
+<div class="file"><h4>src/lib/shareLink.js</h4><p><code>generateShareToken()</code>, <code>buildShareUrl()</code>, <code>parseViewToken()</code> — the share-URL scheme.</p></div>
+<div class="file"><h4>src/viewer/shareControls.js</h4><p>Share-link and Publish buttons in the toolbar, including WhatsApp share.</p></div>
+<div class="file"><h4>src/gallery/main.js, gallery.html</h4><p>The public gallery page — lists published designs as cards.</p></div>
+<div class="file"><h4>src/manufacturer/main.js, portal.js, manufacturer.html</h4><p>Admin portal for manufacturers to upload catalog photos and edit SKU rows (via <code>services/skuAdmin.js</code>).</p></div>
+
+<h2 id="server">12. Servers &amp; deployment</h2>
+<table>
+<tr><th>File</th><th>Role</th></tr>
+<tr><td>app.py</td><td>Flask dev server — serves the built app, proxies <code>/api/analyze</code> to Kimi/Gemini/LM Studio, and handles project save/load + dataset export routes. No longer hosts photoreal or deck-export routes.</td></tr>
+<tr><td>server.mjs</td><td>Lightweight Node alternative — just proxies <code>/api/analyze</code> to a local LM Studio instance.</td></tr>
+<tr><td>vite.config.js</td><td>Multi-page build: <code>index.html</code>, <code>manufacturer.html</code>, <code>gallery.html</code> each get their own bundle.</td></tr>
+<tr><td>wrangler.toml</td><td>Cloudflare Pages config, project name <code>planr</code>. Binds an R2 bucket (<code>sofa-3d</code>) as <code>RENDER_BUCKET</code> for storing photoreal renders.</td></tr>
+<tr><td>functions/api/photoreal.js</td><td>The live Cloudflare Pages Function — the single, production implementation of the photoreal endpoint.</td></tr>
+</table>
+
+<h2 id="scripts">13. Dev/admin scripts (not bundled into the app)</h2>
+<table>
+<tr><th>Script</th><th>What it does</th></tr>
+<tr><td>upload-r2.mjs / r2-client.mjs</td><td>Upload GLB/image assets to Cloudflare R2.</td></tr>
+<tr><td>r2-set-cors.mjs</td><td>Sets CORS on the R2 bucket so the browser can fetch assets cross-origin.</td></tr>
+<tr><td>compress-glb.mjs</td><td>Draco geometry + WebP texture compression for GLB files before upload.</td></tr>
+<tr><td>bake-and-upload-plan2d.mjs</td><td>Bakes top-down PNGs from each catalog item's GLB, uploads to R2, writes the URL back to Supabase.</td></tr>
+<tr><td>gen-plan2d-sql.mjs</td><td>Generates Supabase SQL from plan data.</td></tr>
+<tr><td>audit-connections.mjs</td><td>Sanity-checks that Supabase catalog rows, R2 GLBs, and image URLs are all actually wired up correctly.</td></tr>
+<tr><td>gen-geometry-fixtures.mjs / geometry.test.mjs</td><td>Generates shared test fixtures from the JS geometry implementation and asserts parity — the same fixtures are checked again from the Python side (<code>tests/test_geometry.py</code>) so the JS and Python geometry math never drift apart.</td></tr>
+<tr><td>catalog-adapt.test.mjs</td><td>Tests that every catalog source (Supabase row, preset) adapts to one canonical shape.</td></tr>
+<tr><td>catalog-icon-policy.test.mjs</td><td>Tests the rule for when to show a rich SVG icon vs. a baked GLB thumbnail for seating.</td></tr>
+<tr><td>vastu-placement.test.mjs, furniture-item.test.mjs, share-link.test.mjs, sku-admin.test.mjs</td><td>Unit tests for their matching <code>lib/</code> modules.</td></tr>
+<tr><td>verify-minimap.mjs, verify-photoreal-deck.mjs</td><td>Playwright browser scripts that click through the real app to verify the camera minimap and the photoreal→deck-export chain actually work end to end.</td></tr>
+</table>
+
+<h2 id="gaps">14. Known gaps to be aware of</h2>
+<div class="note"><b>Uncommitted work in progress:</b> your git status shows uncommitted changes to <code>package.json</code>, <code>scripts/compress-glb.mjs</code>, <code>plan3dGlb.js</code>, <code>plan3dViewer.js</code>, and <code>roomAutoStage.js</code>, plus untracked <code>.wrangler/</code>, an R2 backup folder, a new <code>scripts/.verify-perf.mjs</code>, and several <code>.verify-*.png</code> screenshots left over from local verification runs. None of that is reflected above since it's not yet committed — worth deciding before a demo whether those changes should be merged in or the working tree cleaned up.</div>
+<div class="note"><b>No dedicated test for BOQ pricing fallback:</b> <code>catalogPrices.js</code> has no matching <code>*.test.mjs</code> the way most other <code>lib/</code> files do — if you change that price table, nothing will catch a regression automatically.</div>
+
+</div>
