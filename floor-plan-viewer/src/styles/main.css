@@ -285,6 +285,52 @@ body:not([data-phase="plan"]) .toolbar-row--geometry { display: none; }
 body:not([data-phase="furnish"]) .toolbar-row--furniture { display: none; }
 .toolbar-row--file { display: none !important; }
 .llm-status { display: none; }
+
+/* ── Export step (4th) ─────────────────────────────────────────── */
+.export-screen { display: none; }
+body[data-phase="export"] #stage,
+body[data-phase="export"] #contextual-toolbar { display: none !important; }
+body[data-phase="export"] #phase-status { min-height: 28px; }
+body[data-phase="export"] #app { display: flex; flex-direction: column; }
+body[data-phase="export"] .export-screen {
+  display: grid;
+  grid-template-columns: minmax(280px, 32%) minmax(0, 1fr);
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+  padding: 0 12px 12px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.export-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid var(--brand-line);
+  border-radius: var(--brand-radius);
+  background: var(--brand-panel);
+  box-shadow: var(--brand-shadow);
+  overflow-y: auto;
+  min-height: 0;
+}
+.export-summary__thumb { width: 100%; border-radius: 10px; border: 1px solid var(--brand-line); object-fit: cover; aspect-ratio: 4 / 3; background: #efece7; }
+.export-summary__thumb[hidden] { display: none; }
+.export-summary__title { margin: 6px 0 0; font: 700 15px/1.2 "Neue Machina", sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--brand-ink); }
+.export-summary__stats { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.export-summary__stats li { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 10px 12px; border: 1px solid var(--brand-line); border-radius: 10px; background: #fffdf8; }
+.export-summary__stats span { color: var(--brand-muted); font-size: 12px; }
+.export-summary__stats strong { font: 700 18px/1 "Neue Machina", sans-serif; color: var(--brand-ink); }
+.export-summary__badge { align-self: flex-start; padding: 6px 12px; border-radius: var(--brand-pill); border: 1px solid rgba(23, 118, 88, .35); background: rgba(23, 157, 108, .12); color: #10684b; font: 700 11px/1 "Neue Machina", sans-serif; letter-spacing: .04em; text-transform: uppercase; }
+.export-cards { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: minmax(0, 1fr); gap: 12px; min-height: 0; overflow-y: auto; }
+.export-card { display: flex; flex-direction: column; gap: 6px; padding: 22px; border: 1px solid var(--brand-line); border-radius: var(--brand-radius); background: var(--brand-panel); box-shadow: var(--brand-shadow); }
+.export-card__icon { font-size: 26px; line-height: 1; }
+.export-card__title { margin: 2px 0 0; font: 700 17px/1.2 "Neue Machina", sans-serif; color: var(--brand-ink); }
+.export-card__sub { margin: 0; color: var(--brand-muted); font: 11px/1 "Neue Machina", sans-serif; letter-spacing: .06em; text-transform: uppercase; }
+.export-card__desc { margin: 4px 0 auto; color: #5c5852; font-size: 13px; line-height: 1.45; }
+.export-card__action { align-self: flex-start; min-width: 120px; margin-top: 12px; border-radius: var(--brand-pill); background: var(--brand-accent); border-color: var(--brand-accent); color: #fffdf8; font-weight: 700; }
+.export-card__action:hover { filter: brightness(.92); }
+
 .catalog-pricing-note { position: relative; margin: 8px 12px; padding: 12px 34px 12px 14px; border-left: 3px solid #1677c8; background: #f5f9fc; color: #4d5560; font: 13px/1.35 "Neue Machina", sans-serif; }
 .catalog-pricing-note strong, .catalog-pricing-note span { display: block; }
 .catalog-pricing-note strong { margin-bottom: 4px; }
@@ -303,6 +349,7 @@ body:not([data-phase="furnish"]) .toolbar-row--furniture { display: none; }
   body[data-phase="3d"] #stage { grid-template-columns: 1fr; grid-template-rows: minmax(260px, 38vh) minmax(420px, 1fr); }
   body[data-phase="3d"] #catalog-drawer { grid-row: 1; border-width: 0 0 1px; }
   body[data-phase="3d"] #viewport3d { grid-row: 2; }
+  body[data-phase="export"] .export-screen { grid-template-columns: 1fr; height: auto; min-height: 0; overflow: visible; }
 }
 
 body.readonly-share #toolbar { display: none; }

@@ -100,7 +100,8 @@ import { pickRenders } from "./renderPicker.js";
 import { renderPlanThumbnail } from "../lib/planThumbnail.js";
 import { mountShareControls } from "./shareControls.js";
 import { parseViewToken } from "../lib/shareLink.js";
-import { getProjectIdByToken } from "../services/projectShare.js";
+import { buildShareUrl } from "../lib/shareLink.js";
+import { ensureShareToken, getProjectIdByToken } from "../services/projectShare.js";
 
 var PLAN_SIZE = { width: 1000, height: 1000 };
 
@@ -728,6 +729,36 @@ export function initFloorPlanViewer() {
     lastBillSig = null;
     refreshBill();
     markRfqSent();
+  }
+
+  // Build the pitch deck; asks which captured 3D shots to include when any exist.
+  function generatePresentation() {
+    var rows = buildBoqRows(data.furniture || [], lookupCatalogRow, data.rooms || []);
+    if (!rows.length) { alert("No furniture placed yet."); return Promise.resolve(); }
+
+    function generate(renders) {
+      var planImagePromise = (plan && plan.src)
+        ? renderPlanThumbnail(plan.src, null, { maxWidth: 1600 }).catch(function () { return null; })
+        : Promise.resolve(null);
+      return planImagePromise
+        .then(function (planImage) {
+          return downloadDeck(rows, {
+            projectName: data.name || "Project",
+            planImage: planImage,
+            renders: renders,
+          });
+        });
+    }
+
+    // With captured shots, let the user pick which ones make the deck;
+    // otherwise keep the old placeholder-slides behaviour.
+    if (deckRenders.length) {
+      return pickRenders(deckRenders).then(function (chosen) {
+        if (!chosen) return undefined;
+        return generate(chosen);
+      });
+    }
+    return generate([]);
   }
 
   function runFurnitureAction(actionId) {
@@ -1543,8 +1574,10 @@ export function initFloorPlanViewer() {
   }
 
   function setPhase(phase) {
-    activePhase = phase === "3d" ? "3d" : phase === "furnish" ? "furnish" : "plan";
+    activePhase = phase === "3d" ? "3d" : phase === "furnish" ? "furnish" : phase === "export" ? "export" : "plan";
     document.body.dataset.phase = activePhase;
+    if (exportScreen) exportScreen.hidden = activePhase !== "export";
+    if (activePhase === "export") refreshExportSummary();
     if (planRail) planRail.hidden = activePhase !== "plan";
     if (planUndo) planUndo.hidden = activePhase !== "plan";
     if (phaseNav) {
@@ -1571,7 +1604,9 @@ export function initFloorPlanViewer() {
         ? (data.rooms.length + " rooms · " + data.doors.length + " doors · " + data.windows.length + " windows")
         : activePhase === "furnish"
           ? (data.furniture.length + " pieces placed")
-          : "Choose a view, style, or photoreal render";
+          : activePhase === "export"
+            ? "Download every output for this project"
+            : "Choose a view, style, or photoreal render";
     }
     render();
   }
@@ -1972,65 +2007,6 @@ export function initFloorPlanViewer() {
   syncNorthButtons();
   // Appended last (after the Replace controls) so it sits in the far-right corner.
 
-  var rfqBtn = document.createElement("button");
-  rfqBtn.type = "button";
-  rfqBtn.textContent = "RFQ";
-  rfqBtn.title = "Re-open the bill and mark quote bag as sent";
-  rfqBtn.addEventListener("click", reopenBillAndMarkRfq);
-  furnitureRow.appendChild(rfqBtn);
-
-  var boqCsvBtn = document.createElement("button");
-  boqCsvBtn.type = "button";
-  boqCsvBtn.textContent = "Download quote list";
-  boqCsvBtn.title = "Download the quote list as CSV";
-  boqCsvBtn.addEventListener("click", function () {
-    var rows = buildBoqRows(data.furniture || [], lookupCatalogRow, data.rooms || []);
-    if (!rows.length) { alert("No furniture placed yet."); return; }
-    downloadBoqCsv(rows, data.name || null);
-  });
-  furnitureRow.appendChild(boqCsvBtn);
-
-  var deckBtn = document.createElement("button");
-  deckBtn.type = "button";
-  deckBtn.textContent = "Create presentation";
-  deckBtn.title = "Create a branded presentation with your plan, quote and renders";
-  deckBtn.addEventListener("click", function () {
-    var rows = buildBoqRows(data.furniture || [], lookupCatalogRow, data.rooms || []);
-    if (!rows.length) { alert("No furniture placed yet."); return; }
-
-    function generate(renders) {
-      deckBtn.disabled = true;
-      deckBtn.textContent = "Generating…";
-      var planImagePromise = (plan && plan.src)
-        ? renderPlanThumbnail(plan.src, null, { maxWidth: 1600 }).catch(function () { return null; })
-        : Promise.resolve(null);
-      planImagePromise
-        .then(function (planImage) {
-          return downloadDeck(rows, {
-            projectName: data.name || "Project",
-            planImage: planImage,
-            renders: renders,
-          });
-        })
-        .catch(function (err) { alert("Could not create presentation: " + err.message); })
-        .finally(function () {
-          deckBtn.disabled = false;
-          deckBtn.textContent = "Create presentation";
-        });
-    }
-
-    // With captured shots, let the user pick which ones make the deck;
-    // otherwise keep the old placeholder-slides behaviour.
-    if (deckRenders.length) {
-      pickRenders(deckRenders).then(function (chosen) {
-        if (chosen) generate(chosen);
-      });
-    } else {
-      generate([]);
-    }
-  });
-  furnitureRow.appendChild(deckBtn);
-
   furnitureRow.appendChild(replaceLab);
   contextualToolbarEl.appendChild(furnitureRow);
 
@@ -2070,8 +2046,83 @@ export function initFloorPlanViewer() {
       return planImg && planImg.src ? planImg.src : null;
     },
   });
-  if (viewport) billBar.mount(viewport);
+  // Bag strip lives on <body> so it stays available in every step
+  // (Plan / Furnish / 3D / Export), not only where the 2D viewport is.
+  billBar.mount(document.body);
   refreshBill();
+
+  // ── Export screen ─────────────────────────────────────────────────
+  var exportScreen = document.getElementById("export-screen");
+  var exportThumb = document.getElementById("export-thumb");
+  var exportVaastuBadge = document.getElementById("export-vaastu-badge");
+
+  function refreshExportSummary() {
+    var set = function (id, value) {
+      var el = document.getElementById(id);
+      if (el) el.textContent = String(value);
+    };
+    set("export-stat-rooms", data.rooms.length);
+    set("export-stat-doors", data.doors.length);
+    set("export-stat-windows", data.windows.length);
+    set("export-stat-furniture", data.furniture.length);
+    if (exportThumb) {
+      if (plan && plan.src) {
+        exportThumb.src = plan.src;
+        exportThumb.hidden = false;
+      } else {
+        exportThumb.hidden = true;
+      }
+    }
+    if (exportVaastuBadge) exportVaastuBadge.hidden = !vaastuEnabled;
+  }
+
+  var exportQuoteBtn = document.getElementById("export-btn-quote");
+  if (exportQuoteBtn) {
+    exportQuoteBtn.addEventListener("click", function () {
+      var rows = buildBoqRows(data.furniture || [], lookupCatalogRow, data.rooms || []);
+      if (!rows.length) { alert("No furniture placed yet."); return; }
+      downloadBoqCsv(rows, data.name || null);
+    });
+  }
+
+  var exportRfqBtn = document.getElementById("export-btn-rfq");
+  if (exportRfqBtn) {
+    exportRfqBtn.addEventListener("click", function () {
+      reopenBillAndMarkRfq();
+    });
+  }
+
+  var exportDeckBtn = document.getElementById("export-btn-deck");
+  if (exportDeckBtn) {
+    exportDeckBtn.addEventListener("click", function () {
+      exportDeckBtn.disabled = true;
+      generatePresentation()
+        .catch(function (err) { alert("Could not create presentation: " + (err && err.message ? err.message : err)); })
+        .finally(function () {
+          exportDeckBtn.disabled = false;
+        });
+    });
+  }
+
+  var exportShareBtn = document.getElementById("export-btn-share");
+  if (exportShareBtn) {
+    exportShareBtn.addEventListener("click", async function () {
+      var pid = currentProjectIdForShare();
+      if (!pid) { alert("Save the project first (it needs an ID)."); return; }
+      exportShareBtn.disabled = true;
+      try {
+        var token = await ensureShareToken(pid);
+        var url = buildShareUrl(token, window.location.origin);
+        try { await navigator.clipboard.writeText(url); } catch (e) {}
+        alert(url);
+      } catch (err) { alert("Share failed: " + (err.message || err)); }
+      finally { exportShareBtn.disabled = false; }
+    });
+  }
+
+  function currentProjectIdForShare() {
+    return (window.location.hash || "").replace(/^#/, "").trim();
+  }
 
   sofaColorSel.addEventListener("change", function () {
     if (!selectedFurnitureId) return;

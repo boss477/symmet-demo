@@ -36,6 +36,7 @@
       <button type="button" class="phase-nav__btn phase-nav__btn--active" data-phase="plan" data-step="1">Plan</button>
       <button type="button" class="phase-nav__btn" data-phase="furnish" data-step="2">Furnish</button>
       <button type="button" class="phase-nav__btn" data-phase="3d" data-step="3">3D</button>
+      <button type="button" class="phase-nav__btn" data-phase="export" data-step="4">Export</button>
     </nav>
     <div id="contextual-toolbar" class="contextual-toolbar"></div>
     <main id="stage">
@@ -172,6 +173,49 @@
         </div>
       </div>
     </main>
+    <section id="export-screen" class="export-screen" hidden>
+      <aside class="export-summary">
+        <img id="export-thumb" class="export-summary__thumb" alt="Floor plan preview" />
+        <h2 class="export-summary__title">Project summary</h2>
+        <ul class="export-summary__stats">
+          <li><span>Rooms</span><strong id="export-stat-rooms">0</strong></li>
+          <li><span>Doors</span><strong id="export-stat-doors">0</strong></li>
+          <li><span>Windows</span><strong id="export-stat-windows">0</strong></li>
+          <li><span>Furniture</span><strong id="export-stat-furniture">0</strong></li>
+        </ul>
+        <span id="export-vaastu-badge" class="export-summary__badge" hidden>&#10003; Follow placement rules</span>
+      </aside>
+      <div class="export-cards">
+        <article class="export-card">
+          <span class="export-card__icon" aria-hidden="true">&#128203;</span>
+          <h3 class="export-card__title">Quote list</h3>
+          <p class="export-card__sub">BOQ</p>
+          <p class="export-card__desc">Itemized furniture and pricing for this setup, as a spreadsheet.</p>
+          <button type="button" id="export-btn-quote" class="btn export-card__action">Download</button>
+        </article>
+        <article class="export-card">
+          <span class="export-card__icon" aria-hidden="true">&#9993;</span>
+          <h3 class="export-card__title">Request quote</h3>
+          <p class="export-card__sub">RFQ</p>
+          <p class="export-card__desc">Get pricing from your supplier for this setup.</p>
+          <button type="button" id="export-btn-rfq" class="btn export-card__action">Send</button>
+        </article>
+        <article class="export-card">
+          <span class="export-card__icon" aria-hidden="true">&#128202;</span>
+          <h3 class="export-card__title">Presentation</h3>
+          <p class="export-card__sub">Deck PPT</p>
+          <p class="export-card__desc">Pitch deck with your floor plan, furnished renders and 3D snapshots.</p>
+          <button type="button" id="export-btn-deck" class="btn export-card__action">Generate</button>
+        </article>
+        <article class="export-card">
+          <span class="export-card__icon" aria-hidden="true">&#128279;</span>
+          <h3 class="export-card__title">Share link</h3>
+          <p class="export-card__sub">&nbsp;</p>
+          <p class="export-card__desc">A view-only link anyone can open &mdash; no account needed.</p>
+          <button type="button" id="export-btn-share" class="btn export-card__action">Copy link</button>
+        </article>
+      </div>
+    </section>
     <div id="phase-status" class="phase-status" aria-live="polite"></div>
     <div id="tip" role="tooltip" hidden></div>
   </div>

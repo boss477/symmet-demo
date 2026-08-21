@@ -1286,13 +1286,14 @@ body.view3d-top-mode.view3d-dragging #viewport3d canvas {
 .furniture-floating-toolbar__btn[data-action="remove"]:hover:not(:disabled) {
   background: rgba(248, 113, 113, 0.2);
 }
-/* Live bill bar — IKEA-style compact strip */
+/* Live bill bar — IKEA-style compact strip (fixed to the window so it
+   stays visible in every step: Plan / Furnish / 3D / Export) */
 .bill-bar {
-  position: absolute;
+  position: fixed;
   left: 50%;
   bottom: 16px;
   transform: translateX(-50%);
-  z-index: 24;
+  z-index: 70;
 }
 .bill-bar[hidden] {
   display: none !important;
