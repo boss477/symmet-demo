@@ -383,14 +383,25 @@ export function createCatalogDrawer(opts) {
       card.setAttribute("role", "button");
       card.setAttribute("aria-label", "Add " + (r.product_name || r.product_code || "item"));
 
-      // ── Compact icon thumbnail (40×40) ──────────────────────────────────
-      var thumb = document.createElement("div");
-      thumb.className = "catalog-card__thumb";
+      var imgWrap = document.createElement("div");
+      imgWrap.className = "catalog-card__media";
+
+      var fav = document.createElement("button");
+      fav.type = "button";
+      fav.className = "catalog-card__fav";
+      fav.textContent = state.favorites[r.product_code] ? "♥" : "♡";
+      fav.setAttribute("data-on", state.favorites[r.product_code] ? "1" : "0");
+      fav.title = state.favorites[r.product_code] ? "Remove from favorites" : "Add to favorites";
+      fav.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleFavorite(r.product_code);
+      });
 
       var imgUrl = catalogImageUrl(r);
       if (imgUrl) {
         var img = document.createElement("img");
-        img.className = "catalog-card__thumb-img";
+        img.className = "catalog-card__img";
         img.alt = r.product_name || r.product_code || "Product";
         img.loading = "lazy";
         img.decoding = "async";
@@ -406,27 +417,13 @@ export function createCatalogDrawer(opts) {
             return;
           }
           img.remove();
-          var fallbackIcon = buildIconMedia(r);
-          if (fallbackIcon) {
-            fallbackIcon.className = "catalog-card__thumb-svg";
-            thumb.appendChild(fallbackIcon);
-          }
+          imgWrap.appendChild(mediaFallback(r));
         });
-        thumb.appendChild(img);
+        imgWrap.appendChild(img);
       } else {
-        var svgIcon = buildIconMedia(r);
-        if (svgIcon) {
-          svgIcon.className = "catalog-card__thumb-svg";
-          thumb.appendChild(svgIcon);
-        } else {
-          var initials = document.createElement("span");
-          initials.className = "catalog-card__thumb-init";
-          initials.textContent = (r.product_code || r.product_name || "?")[0].toUpperCase();
-          thumb.appendChild(initials);
-        }
+        imgWrap.appendChild(mediaFallback(r));
       }
 
-      // ── Text block ────────────────────────────────────────────────────
       var body = document.createElement("div");
       body.className = "catalog-card__body";
 
@@ -436,29 +433,26 @@ export function createCatalogDrawer(opts) {
       name.textContent = displayName;
       name.title = displayName;
 
+      var desc = document.createElement("div");
+      desc.className = "catalog-card__desc";
+      desc.textContent = (r.product_code || r.category || displayName).trim();
+
+      var meta = document.createElement("div");
+      meta.className = "catalog-card__meta";
+
       var dims = document.createElement("div");
       dims.className = "catalog-card__dims";
       dims.textContent = formatDims(r) || "Standard";
 
+      meta.appendChild(dims);
+      meta.appendChild(fav);
+
       body.appendChild(name);
-      body.appendChild(dims);
+      body.appendChild(desc);
+      body.appendChild(meta);
 
-      // ── Fav button ────────────────────────────────────────────────────
-      var fav = document.createElement("button");
-      fav.type = "button";
-      fav.className = "catalog-card__fav";
-      fav.textContent = state.favorites[r.product_code] ? "♥" : "♡";
-      fav.setAttribute("data-on", state.favorites[r.product_code] ? "1" : "0");
-      fav.title = state.favorites[r.product_code] ? "Remove from favorites" : "Add to favorites";
-      fav.addEventListener("click", function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        toggleFavorite(r.product_code);
-      });
-
-      card.appendChild(thumb);
+      card.appendChild(imgWrap);
       card.appendChild(body);
-      card.appendChild(fav);
 
       function addThis() {
         if (typeof onAdd === "function") onAdd(r);
