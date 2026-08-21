@@ -10,8 +10,6 @@ import {
   fileToImageBase64,
   imageSrcToImageBase64,
   isVisionConfigured,
-  visionAnalyzingMessage,
-  visionProviderLabel,
 } from "../services/vision.js";
 import { renderRealisticPlanCanvas } from "./realistic2dCanvas.js";
 import { vastuTargetInRoom, vastuRoomHint, vastuRuleForItem, resolveVastuOverlaps } from "../lib/vastuPlacement.js";
@@ -197,17 +195,9 @@ export function initFloorPlanViewer() {
   var llmStatus = document.createElement("span");
   llmStatus.className = "llm-status";
   llmStatus.setAttribute("aria-live", "polite");
-  var serverLabel =
-    typeof window !== "undefined" && window.__SERVER_KIMI_MODEL__
-      ? "Kimi " + String(window.__SERVER_KIMI_MODEL__)
-      : typeof window !== "undefined" && window.__SERVER_GEMINI_MODEL__
-        ? "Gemini " + String(window.__SERVER_GEMINI_MODEL__)
-        : typeof window !== "undefined" && window.__SERVER_LM_MODEL__
-          ? "LM Studio " + String(window.__SERVER_LM_MODEL__)
-          : "";
   llmStatus.textContent = isVisionConfigured()
-    ? "LLM: " + (serverLabel || visionProviderLabel()) + " (press Analyze LLM)"
-    : "LLM: set VITE_GEMINI_API_KEY, LM Studio, or VITE_ANALYZE_API in .env";
+    ? "Open a plan image, then press Read floor plan"
+    : "Plan reading isn't set up — you can still draw your plan";
 
   function setLlmStatus(msg) {
     llmStatus.textContent = msg;
@@ -239,7 +229,7 @@ export function initFloorPlanViewer() {
 
   var scaleEl = document.createElement("span");
   scaleEl.className = "calibration-scale";
-  scaleEl.textContent = "Scale: load plan + JSON calibration";
+  scaleEl.textContent = "Scale: load a plan to calibrate";
 
   var furnitureInfoEl = document.createElement("span");
   furnitureInfoEl.className = "furniture-info";
@@ -291,14 +281,14 @@ export function initFloorPlanViewer() {
       furnitureInfoEl.textContent =
         item.catalogId + " — use Replace with to pick a catalog item";
     } else {
-      furnitureInfoEl.textContent = "Selected — use Replace with for DB size + icon";
+      furnitureInfoEl.textContent = "Selected — use Replace with to apply catalog sizes";
     }
   }
 
   function refreshCalibration() {
     if (!plan.naturalWidth || !plan.naturalHeight || !data.calibration) {
       calibrationState = null;
-      scaleEl.textContent = "Scale: no calibration in JSON or image not loaded";
+      scaleEl.textContent = "Scale: not calibrated yet";
       return;
     }
     calibrationState = resolveCalibration(
@@ -361,7 +351,7 @@ export function initFloorPlanViewer() {
     sofaColorSel.appendChild(autoOpt);
 
     var grpAvail = document.createElement("optgroup");
-    grpAvail.label = row && row.colours ? "From Supabase Colours" : "Available for this line";
+    grpAvail.label = row && row.colours ? "Available colours" : "Available for this line";
     available.forEach(function (id) {
       var o = document.createElement("option");
       o.value = id;
@@ -1055,7 +1045,7 @@ export function initFloorPlanViewer() {
       eventType: "auto_staged",
       payload: { count: count, vaastuEnabled: vaastuEnabled },
     });
-    setLlmStatus("Auto-staged " + count + " furniture items (rich SVG + GLB sofa demo)");
+    setLlmStatus("Furnished " + count + " item(s) automatically");
     setPhase(activePhase);
   }
 
@@ -1264,7 +1254,7 @@ export function initFloorPlanViewer() {
       })
       .then(function (j) {
         applyAnalysisFromObject(j);
-        setLlmStatus("LLM: sample JSON (not from model)");
+        setLlmStatus("Demo plan loaded");
       })
       .catch(function () {
         alert("Could not load /fixtures/sample-plan.json");
@@ -1615,12 +1605,12 @@ export function initFloorPlanViewer() {
     rfqStatus = "sent";
     projectStatus = "rfq_sent";
     pendingEvents.push({ eventType: "rfq_sent", payload: payload });
-    setLlmStatus("RFQ ready: " + payload.items.length + " SKU(s) — save to DB to persist");
+    setLlmStatus("RFQ ready: " + payload.items.length + " item(s) — save the project to keep it");
   }
 
   function saveToDb() {
     var defaultId = window.location.hash.replace("#", "") || (crypto && crypto.randomUUID ? crypto.randomUUID() : "project-12345");
-    var pid = prompt("Save Project under ID (UUID):", defaultId);
+    var pid = prompt("Save project under ID:", defaultId);
     if (!pid) return;
     var body = currentAnalysisJson();
     pendingEvents.push({ eventType: "plan_saved", payload: { projectId: pid } });
@@ -1651,7 +1641,7 @@ export function initFloorPlanViewer() {
   }
 
   function loadFromDb() {
-    var pid = prompt("Enter Project UUID to load from Supabase:");
+    var pid = prompt("Enter project ID to load:");
     if (!pid) return;
     fetch("/api/projects/" + pid)
       .then(function (r) {
@@ -1664,7 +1654,7 @@ export function initFloorPlanViewer() {
         if (vaastuToggle) vaastuToggle.checked = vaastuEnabled;
         syncNorthButtons();
         setLlmStatus("Loaded · " + (loaded.meta && loaded.meta.tenantId ? loaded.meta.tenantId : "default"));
-        alert("Project loaded from Supabase.");
+        alert("Project loaded.");
       })
       .catch(function (err) {
         alert("Load failed: " + err.message);
@@ -1908,8 +1898,8 @@ export function initFloorPlanViewer() {
 
   var autoStageBtn = document.createElement("button");
   autoStageBtn.type = "button";
-  autoStageBtn.textContent = "Auto stage";
-  autoStageBtn.title = "Place rich SVG + demo GLB sofa in each room";
+  autoStageBtn.textContent = "Furnish room";
+  autoStageBtn.title = "Automatically furnish every room";
   autoStageBtn.addEventListener("click", function () {
     runAutoStage(true);
   });
@@ -1991,8 +1981,8 @@ export function initFloorPlanViewer() {
 
   var boqCsvBtn = document.createElement("button");
   boqCsvBtn.type = "button";
-  boqCsvBtn.textContent = "BOQ CSV";
-  boqCsvBtn.title = "Download Bill of Quantities as CSV";
+  boqCsvBtn.textContent = "Download quote list";
+  boqCsvBtn.title = "Download the quote list as CSV";
   boqCsvBtn.addEventListener("click", function () {
     var rows = buildBoqRows(data.furniture || [], lookupCatalogRow, data.rooms || []);
     if (!rows.length) { alert("No furniture placed yet."); return; }
@@ -2002,8 +1992,8 @@ export function initFloorPlanViewer() {
 
   var deckBtn = document.createElement("button");
   deckBtn.type = "button";
-  deckBtn.textContent = "Deck PPT";
-  deckBtn.title = "Download branded pitch deck (.pptx) with BOQ + render slots";
+  deckBtn.textContent = "Create presentation";
+  deckBtn.title = "Create a branded presentation with your plan, quote and renders";
   deckBtn.addEventListener("click", function () {
     var rows = buildBoqRows(data.furniture || [], lookupCatalogRow, data.rooms || []);
     if (!rows.length) { alert("No furniture placed yet."); return; }
@@ -2022,10 +2012,10 @@ export function initFloorPlanViewer() {
             renders: renders,
           });
         })
-        .catch(function (err) { alert("Deck PPT failed: " + err.message); })
+        .catch(function (err) { alert("Could not create presentation: " + err.message); })
         .finally(function () {
           deckBtn.disabled = false;
-          deckBtn.textContent = "Deck PPT";
+          deckBtn.textContent = "Create presentation";
         });
     }
 
@@ -2127,7 +2117,7 @@ export function initFloorPlanViewer() {
     plan,
     function () {
       onPlanLoaded();
-      // Vision analysis is manual now — press "Analyze LLM" to run it.
+      // Vision analysis is manual now — press "Read floor plan" to run it.
     },
     function (file) {
       lastOpenedFile = file;

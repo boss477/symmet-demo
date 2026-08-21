@@ -40,8 +40,8 @@ export function mountFileToolbar(container, handlers) {
   }
 
   addButton(ingestGroup, "Try demo", handlers.loadFixture);
-  if (handlers.uploadSupabase) addButton(ingestGroup, "Upload plan (Supabase)", handlers.uploadSupabase);
-  if (handlers.analyzeLlm) addButton(ingestGroup, "Analyze LLM", handlers.analyzeLlm);
+  if (handlers.uploadSupabase) addButton(ingestGroup, "Upload plan", handlers.uploadSupabase);
+  if (handlers.analyzeLlm) addButton(ingestGroup, "Read floor plan", handlers.analyzeLlm);
 
   var projectGroup = addGroup("Project", "toolbar-command-group--project");
   addButton(projectGroup, "Save", handlers.saveToDb);
