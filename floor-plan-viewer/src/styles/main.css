@@ -203,8 +203,8 @@ button.tool-active, .sku-filter-btn--active { background: var(--brand-accent); b
   max-height: 100%;
   min-height: 0;
   min-width: 0;
-  display: flex !important;
-  flex-direction: column !important;
+  display: flex;
+  flex-direction: column;
   border: 1px solid var(--brand-line);
   border-radius: var(--brand-radius);
   background: var(--brand-panel);
@@ -212,7 +212,7 @@ button.tool-active, .sku-filter-btn--active { background: var(--brand-accent); b
   overflow: hidden;
   z-index: 10;
 }
-#catalog-drawer[hidden] { display: block; }
+#catalog-drawer[hidden] { display: none; }
 .catalog-drawer__top { flex-shrink: 0; padding: 10px 12px; border-bottom: 1px solid var(--brand-line); display: flex; align-items: center; justify-content: space-between; gap: 10px; background: #ffffff; }
 .catalog-controls { flex-shrink: 0; padding: 10px 12px; border-bottom: 1px solid var(--brand-line); background: #ffffff; }
 .catalog-body { flex: 1 1 0 !important; min-height: 0 !important; max-height: 100%; overflow-y: auto !important; overflow-x: hidden; padding: 10px 12px; }
@@ -267,13 +267,20 @@ button.tool-active, .sku-filter-btn--active { background: var(--brand-accent); b
 .upload-overlay__status { min-height: 1.2em; margin: 0; color: var(--brand-accent-strong); font-size: 13px; }
 .upload-overlay__drop--active { border-color: var(--brand-accent); background: rgba(187, 91, 57, .08); }
 .phase-status { min-height: 28px; padding: 6px 18px 10px; color: var(--brand-muted); font: 11px/1.2 "Neue Machina", sans-serif; letter-spacing: .03em; }
+
+body[data-phase="plan"] #stage { grid-template-columns: 200px minmax(0, 1fr); }
+body[data-phase="plan"] #plan-rail { display: flex !important; }
+body[data-phase="plan"] #catalog-drawer { display: none !important; }
+body:not([data-phase="plan"]) #plan-rail { display: none !important; }
+
+body[data-phase="furnish"] #stage { grid-template-columns: minmax(280px, 32%) minmax(0, 68%); }
+body[data-phase="furnish"] #catalog-drawer { display: flex !important; }
+
 body[data-phase="3d"] #stage { grid-template-columns: minmax(300px, 34%) minmax(0, 66%); padding: 0; }
 body[data-phase="3d"] #catalog-drawer { grid-column: 1; grid-row: 1; display: flex !important; border-radius: 0; border-width: 0 1px 0 0; box-shadow: none; }
 body[data-phase="3d"] #viewport3d { grid-column: 2; border-radius: 0; border: 0; }
 body[data-phase="3d"] .phase-status { display: none; }
-body:not([data-phase="furnish"]):not([data-phase="3d"]) #catalog-drawer { display: none; }
-body[data-phase="plan"] #stage { grid-template-columns: 190px minmax(0, 1fr); }
-body[data-phase="furnish"] #stage { grid-template-columns: minmax(280px, 32%) minmax(0, 68%); }
+
 body:not([data-phase="plan"]) .toolbar-row--geometry { display: none; }
 body:not([data-phase="furnish"]) .toolbar-row--furniture { display: none; }
 .toolbar-row--file { display: none !important; }
