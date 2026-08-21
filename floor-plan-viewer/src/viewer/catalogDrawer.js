@@ -383,9 +383,67 @@ export function createCatalogDrawer(opts) {
       card.setAttribute("role", "button");
       card.setAttribute("aria-label", "Add " + (r.product_name || r.product_code || "item"));
 
-      var imgWrap = document.createElement("div");
-      imgWrap.className = "catalog-card__media";
+      // ── Compact icon thumbnail (40×40) ──────────────────────────────────
+      var thumb = document.createElement("div");
+      thumb.className = "catalog-card__thumb";
 
+      var imgUrl = catalogImageUrl(r);
+      if (imgUrl) {
+        var img = document.createElement("img");
+        img.className = "catalog-card__thumb-img";
+        img.alt = r.product_name || r.product_code || "Product";
+        img.loading = "lazy";
+        img.decoding = "async";
+        img.referrerPolicy = "no-referrer";
+        img.src = imgUrl;
+        var retries = 0;
+        img.addEventListener("error", function () {
+          if (retries < 2) {
+            retries += 1;
+            setTimeout(function () {
+              img.src = imgUrl + (imgUrl.indexOf("?") >= 0 ? "&" : "?") + "r=" + retries;
+            }, 800 * retries);
+            return;
+          }
+          img.remove();
+          var fallbackIcon = buildIconMedia(r);
+          if (fallbackIcon) {
+            fallbackIcon.className = "catalog-card__thumb-svg";
+            thumb.appendChild(fallbackIcon);
+          }
+        });
+        thumb.appendChild(img);
+      } else {
+        var svgIcon = buildIconMedia(r);
+        if (svgIcon) {
+          svgIcon.className = "catalog-card__thumb-svg";
+          thumb.appendChild(svgIcon);
+        } else {
+          var initials = document.createElement("span");
+          initials.className = "catalog-card__thumb-init";
+          initials.textContent = (r.product_code || r.product_name || "?")[0].toUpperCase();
+          thumb.appendChild(initials);
+        }
+      }
+
+      // ── Text block ────────────────────────────────────────────────────
+      var body = document.createElement("div");
+      body.className = "catalog-card__body";
+
+      var displayName = (r.product_name || r.product_code || "Item").trim();
+      var name = document.createElement("div");
+      name.className = "catalog-card__name";
+      name.textContent = displayName;
+      name.title = displayName;
+
+      var dims = document.createElement("div");
+      dims.className = "catalog-card__dims";
+      dims.textContent = formatDims(r) || "Standard";
+
+      body.appendChild(name);
+      body.appendChild(dims);
+
+      // ── Fav button ────────────────────────────────────────────────────
       var fav = document.createElement("button");
       fav.type = "button";
       fav.className = "catalog-card__fav";
@@ -398,63 +456,9 @@ export function createCatalogDrawer(opts) {
         toggleFavorite(r.product_code);
       });
 
-      var imgUrl = catalogImageUrl(r);
-      if (imgUrl) {
-        var img = document.createElement("img");
-        img.className = "catalog-card__img";
-        img.alt = r.product_name || r.product_code || "Product";
-        img.loading = "lazy";
-        img.decoding = "async";
-        img.referrerPolicy = "no-referrer";
-        img.src = imgUrl;
-        // r2.dev public buckets are rate-limited; a burst of ~130 card images
-        // can drop some requests. Retry a couple of times before falling back.
-        var retries = 0;
-        img.addEventListener("error", function () {
-          if (retries < 2) {
-            retries += 1;
-            setTimeout(function () {
-              img.src = imgUrl + (imgUrl.indexOf("?") >= 0 ? "&" : "?") + "r=" + retries;
-            }, 800 * retries);
-            return;
-          }
-          img.remove();
-          imgWrap.appendChild(mediaFallback(r));
-        });
-        imgWrap.appendChild(img);
-      } else {
-        imgWrap.appendChild(mediaFallback(r));
-      }
-
-      var body = document.createElement("div");
-      body.className = "catalog-card__body";
-
-      var displayName = (r.product_name || r.product_code || "Item").trim();
-      var name = document.createElement("div");
-      name.className = "catalog-card__name";
-      name.textContent = displayName;
-      name.title = displayName;
-
-      var desc = document.createElement("div");
-      desc.className = "catalog-card__desc";
-      desc.textContent = (r.product_code || r.category || displayName).trim();
-
-      var meta = document.createElement("div");
-      meta.className = "catalog-card__meta";
-
-      var dims = document.createElement("div");
-      dims.className = "catalog-card__dims";
-      dims.textContent = formatDims(r) || "Standard";
-
-      meta.appendChild(dims);
-      meta.appendChild(fav);
-
-      body.appendChild(name);
-      body.appendChild(desc);
-      body.appendChild(meta);
-
-      card.appendChild(imgWrap);
+      card.appendChild(thumb);
       card.appendChild(body);
+      card.appendChild(fav);
 
       function addThis() {
         if (typeof onAdd === "function") onAdd(r);

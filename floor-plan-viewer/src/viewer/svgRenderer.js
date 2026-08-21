@@ -499,9 +499,9 @@ function renderDetailedFurniture(svg, furniture, catalog, selectedIds, primaryId
             width: box.w + 8,
             height: box.h + 8,
             fill: "none",
-            stroke: isPrimary ? "#ffcc00" : "#eab308",
+            stroke: isPrimary ? "#0d9488" : "#14b8a6",
             "stroke-width": isPrimary ? 2.5 : 2,
-            "stroke-dasharray": isPrimary ? "6 4" : "none",
+            "stroke-dasharray": "none",
             rx: 4,
           })
         );
