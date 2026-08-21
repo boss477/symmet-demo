@@ -89,9 +89,9 @@ export function mountGeometryToolbar(container, handlers) {
   buttons.btnSetScale = addButton("Set scale", handlers.toggleSetScale, "btnSetScale", false);
   buttons.btnMeasure = addButton("Measure", handlers.toggleMeasure, "btnMeasure", false);
   buttons.btnVertexEdit = addButton("Edit vertices", handlers.toggleVertexEdit, "btnVertexEdit", false);
-  buttons.btnDrawRoom = addButton("Add room", handlers.toggleDrawRoom, "btnDrawRoom", true);
+  buttons.btnDrawRoom = addButton("Add room", handlers.toggleDrawRoom, "btnDrawRoom", false);
   buttons.btnWalls = addButton("Walls", handlers.toggleWalls, "btnWalls", false);
-  buttons.btnWindows = addButton("Windows", handlers.toggleWindows, "btnWindows", true);
+  buttons.btnWindows = addButton("Windows", handlers.toggleWindows, "btnWindows", false);
   buttons.btnWindows.title = "Click a window to select it, drag to move, Delete window to remove";
   buttons.btnHideOverlay = addButton(
     "Hide overlay",
