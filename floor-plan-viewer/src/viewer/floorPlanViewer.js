@@ -613,7 +613,11 @@ export function initFloorPlanViewer() {
       planHeightPx: plan.naturalHeight || size.height,
       furnitureCatalog: fullCatalog(),
     };
-    geoOpts.display = displayState;
+    var effectiveDisplay = Object.assign({}, displayState);
+    if (activePhase === "plan") {
+      effectiveDisplay.furniture = false;
+    }
+    geoOpts.display = effectiveDisplay;
     renderPlan(overlay, data, activeRoomId, selectedFurnitureId, size, geoOpts);
     positionFloatingToolbar();
     refreshBill();
@@ -1567,6 +1571,10 @@ export function initFloorPlanViewer() {
       show2D();
       if (catalogDrawer) catalogDrawer.setOpen(activePhase === "furnish" || activePhase === "3d");
     }
+    if (activePhase === "plan") {
+      if (furnitureToolbar) furnitureToolbar.hide();
+      selectedFurnitureId = null;
+    }
     var phaseStatus = document.getElementById("phase-status");
     if (phaseStatus) {
       phaseStatus.textContent = activePhase === "plan"
@@ -1575,6 +1583,7 @@ export function initFloorPlanViewer() {
           ? (data.furniture.length + " pieces placed")
           : "Choose a view, style, or photoreal render";
     }
+    render();
   }
 
   function show3D() {
