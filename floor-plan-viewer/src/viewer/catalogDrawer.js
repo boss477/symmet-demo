@@ -275,10 +275,6 @@ export function createCatalogDrawer(opts) {
     return String(row.category || "") === cat;
   }
 
-  function hasGlbModel(row) {
-    return !!(row && String(row.model_3d_url || "").trim());
-  }
-
   function filteredCatalog() {
     var rows = state.catalog || [];
     if (state.tab === "favorites") {
@@ -288,7 +284,6 @@ export function createCatalogDrawer(opts) {
     }
     return rows.filter(function (r) {
       if (!r) return false;
-      if (!hasGlbModel(r)) return false;
       if (!matchesRoom(r)) return false;
       if (!matchesCategory(r)) return false;
       if (!matchesQuery(r)) return false;
@@ -391,6 +386,19 @@ export function createCatalogDrawer(opts) {
       var imgWrap = document.createElement("div");
       imgWrap.className = "catalog-card__media";
 
+      var fav = document.createElement("button");
+      fav.type = "button";
+      fav.className = "catalog-card__fav";
+      fav.textContent = state.favorites[r.product_code] ? "♥" : "♡";
+      fav.setAttribute("data-on", state.favorites[r.product_code] ? "1" : "0");
+      fav.title = state.favorites[r.product_code] ? "Remove from favorites" : "Add to favorites";
+      fav.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleFavorite(r.product_code);
+      });
+      imgWrap.appendChild(fav);
+
       var imgUrl = catalogImageUrl(r);
       if (imgUrl) {
         var img = document.createElement("img");
@@ -422,48 +430,28 @@ export function createCatalogDrawer(opts) {
       var body = document.createElement("div");
       body.className = "catalog-card__body";
 
+      var displayName = (r.product_name || r.product_code || "Item").trim();
       var name = document.createElement("div");
       name.className = "catalog-card__name";
-      name.textContent = r.product_code || r.product_name || "Item";
-
-      var desc = document.createElement("div");
-      desc.className = "catalog-card__desc";
-      desc.textContent = r.product_name || "";
-
-      var meta = document.createElement("div");
-      meta.className = "catalog-card__meta";
+      name.textContent = displayName;
+      name.title = displayName;
 
       var dims = document.createElement("div");
       dims.className = "catalog-card__dims";
-      dims.textContent = formatDims(r);
+      dims.textContent = formatDims(r) || "Standard";
 
-      var fav = document.createElement("button");
-      fav.type = "button";
-      fav.className = "catalog-card__fav";
-      fav.textContent = state.favorites[r.product_code] ? "♥" : "♡";
-      fav.setAttribute("data-on", state.favorites[r.product_code] ? "1" : "0");
-      fav.title = state.favorites[r.product_code] ? "Remove from favorites" : "Add to favorites";
-      fav.addEventListener("click", function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        toggleFavorite(r.product_code);
-      });
-
-      meta.appendChild(dims);
-      meta.appendChild(fav);
-
-      body.appendChild(name);
-      body.appendChild(desc);
       var priceEl = document.createElement("div");
       priceEl.className = "catalog-card__price";
-      if (r.price != null) {
+      if (r.price != null && !isNaN(Number(r.price))) {
         priceEl.textContent = "₹" + Number(r.price).toLocaleString("en-IN");
       } else {
         priceEl.textContent = "Price on request";
         priceEl.classList.add("catalog-card__price--na");
       }
+
+      body.appendChild(name);
+      body.appendChild(dims);
       body.appendChild(priceEl);
-      body.appendChild(meta);
 
       card.appendChild(imgWrap);
       card.appendChild(body);

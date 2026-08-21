@@ -10,21 +10,17 @@
   <!-- Upload overlay shown on first load -->
   <div id="upload-overlay" class="upload-overlay">
     <div class="upload-overlay__card">
-      <h1 class="upload-overlay__title">Floor Plan Viewer</h1>
+      <h1 class="upload-overlay__title">Your floor plan</h1>
       <p class="upload-overlay__sub">Upload your floor plan image to get started</p>
       <label class="upload-overlay__drop" id="upload-drop-zone">
         <input type="file" id="upload-overlay-input" accept="image/*,application/pdf,.dxf,.dwg" style="display:none" />
         <span class="upload-overlay__icon">&#128247;</span>
-        <span class="upload-overlay__label">Click to upload image or PDF</span>
-        <span class="upload-overlay__hint">PNG, JPG, SVG, PDF, DXF or DWG supported</span>
+        <span class="upload-overlay__label">Drop your floor plan here</span>
+        <span class="upload-overlay__hint">PNG, JPG, PDF, DXF or DWG</span>
       </label>
-      <div class="upload-overlay__divider"><span>or</span></div>
-      <label class="upload-overlay__cad-btn" id="upload-cad-label">
-        <input type="file" id="upload-overlay-cad" accept=".dxf,.dwg" style="display:none" />
-        Upload CAD (DXF/DWG)
-      </label>
-      <div class="upload-overlay__divider"><span>or</span></div>
+      <div class="upload-overlay__or"><span>or</span></div>
       <button type="button" id="upload-overlay-demo" class="upload-overlay__demo-btn">Try demo</button>
+      <p id="upload-overlay-status" class="upload-overlay__status" aria-live="polite"></p>
     </div>
   </div>
 
@@ -36,7 +32,27 @@
       </div>
       <button type="button" class="theme-toggle" id="theme-toggle">Dark</button>
     </header>
+    <nav id="phase-nav" class="phase-nav" aria-label="Design steps" hidden>
+      <button type="button" class="phase-nav__btn phase-nav__btn--active" data-phase="plan" data-step="1">Plan</button>
+      <button type="button" class="phase-nav__btn" data-phase="furnish" data-step="2">Furnish</button>
+      <button type="button" class="phase-nav__btn" data-phase="3d" data-step="3">3D</button>
+    </nav>
+    <div id="contextual-toolbar" class="contextual-toolbar"></div>
     <main id="stage">
+      <aside id="plan-rail" class="plan-rail" hidden>
+        <div class="plan-rail__title">Add</div>
+        <button type="button" data-plan-tool="drawRoom">+ Room</button>
+        <button type="button" data-plan-tool="drawWall">+ Wall</button>
+        <button type="button" data-plan-tool="cutDoor">+ Door</button>
+        <button type="button" data-plan-tool="editWindows">+ Window</button>
+        <details class="plan-rail__edit">
+          <summary>Edit plan</summary>
+          <button type="button" data-plan-tool="setScale">Set scale</button>
+          <button type="button" data-plan-tool="measure">Measure</button>
+          <button type="button" data-plan-tool="vertexEdit">Edit vertices</button>
+          <button type="button" data-plan-tool="cutWall">Cut</button>
+        </details>
+      </aside>
       <aside id="catalog-drawer" class="catalog-drawer" hidden>
         <div class="catalog-drawer__top">
           <div class="catalog-tabs" role="tablist" aria-label="Catalog tabs">
@@ -77,6 +93,11 @@
           </div>
           <div id="catalog-chips" class="catalog-chips" aria-label="Quick categories"></div>
         </div>
+        <div class="catalog-pricing-note" id="catalog-pricing-note">
+          <strong>Final pricing may differ</strong>
+          <button type="button" aria-label="Dismiss pricing note">×</button>
+          <span>Please review pricing details during checkout.</span>
+        </div>
 
         <div class="catalog-body">
           <div id="catalog-grid" class="catalog-grid" aria-label="Catalog products"></div>
@@ -91,9 +112,20 @@
             <svg id="overlay" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"></svg>
           </div>
         </div>
+        <div id="plan-zoom-controls" aria-label="Plan zoom controls">
+          <button type="button" id="plan-zoom-in" aria-label="Zoom in">+</button>
+          <span id="plan-zoom-level">100%</span>
+          <button type="button" id="plan-zoom-out" aria-label="Zoom out">−</button>
+          <button type="button" id="plan-zoom-fit" aria-label="Fit plan to screen">Fit</button>
+        </div>
       </div>
       <div id="viewport3d" style="display: none;">
         <div id="view3d-hint">Click furniture to select</div>
+        <div id="view3d-zoom-controls" aria-label="3D zoom controls">
+          <button type="button" id="view3d-zoom-in" aria-label="Zoom in">+</button>
+          <button type="button" id="view3d-zoom-out" aria-label="Zoom out">−</button>
+          <button type="button" id="view3d-zoom-fit" aria-label="Fit 3D view">Fit</button>
+        </div>
         <div id="view3d-side-panel" hidden></div>
         <div id="view3d-chrome" hidden>
           <div id="view3d-bar">
@@ -111,6 +143,10 @@
             <span class="view3d-sep"></span>
             <button type="button" class="view3d-btn" id="btn3d-move" data-mode="move">
               Move
+            </button>
+            <span class="view3d-sep"></span>
+            <button type="button" class="view3d-btn" id="btn3d-furniture" aria-pressed="true">
+              Hide furniture
             </button>
             <span class="view3d-sep"></span>
             <button type="button" class="view3d-btn" id="btn3d-path" title="Camera mini-map">Camera</button>
@@ -145,6 +181,7 @@
         </div>
       </div>
     </main>
+    <div id="phase-status" class="phase-status" aria-live="polite"></div>
     <div id="tip" role="tooltip" hidden></div>
   </div>
   <script type="module" src="/src/main.js"></script>

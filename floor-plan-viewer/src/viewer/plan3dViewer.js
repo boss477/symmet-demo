@@ -76,6 +76,7 @@ var sceneContent = null;
 var planToWorld = null;
 var sceneMetrics = { wReal: 10, hReal: 10 };
 var furnitureGroups = [];
+var furnitureVisible = true;
 var roomFloorMeshes = [];
 var wallSegmentMeshes = [];
 var activePaintColor = "warm-white";
@@ -109,10 +110,34 @@ var composer = null;
 var ssaoPass = null;
 var aoWatch = { accum: 0, frames: 0, warmed: false, lastT: 0 };
 
+var hardwareProfile = { isCpuOrLowEnd: false, isSoftware: false, dprCap: 1.0 };
+
+function detectHardwareProfile(rend) {
+  var gl = rend ? rend.getContext() : null;
+  var debugInfo = gl ? gl.getExtension("WEBGL_debug_renderer_info") : null;
+  var unmasked = debugInfo ? (gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || "").toLowerCase() : "";
+
+  var isSoftware = /swiftshader|llvmpipe|software|basic render|microsoft basic|mesa|cpu/i.test(unmasked);
+  var isIntegrated = /intel.*(hd|uhd|iris|graphics)|gma|adreno 3|adreno 4|mali-4|mali-t/i.test(unmasked);
+  var cores = navigator.hardwareConcurrency || 2;
+  var mem = navigator.deviceMemory || 2;
+
+  var isCpuOrLowEnd = isSoftware || (cores <= 4 && mem <= 4) || isIntegrated;
+  var dprCap = isSoftware ? 1.0 : isCpuOrLowEnd ? 1.15 : 1.5;
+
+  hardwareProfile = {
+    isCpuOrLowEnd: isCpuOrLowEnd,
+    isSoftware: isSoftware,
+    dprCap: dprCap,
+    rendererStr: unmasked,
+  };
+  return hardwareProfile;
+}
+
 /**
  * Adaptive quality: while the camera moves (orbit/pan/zoom/flights) or
- * furniture is dragged, skip SSAO and render at 1x pixel ratio so interaction
- * stays at full frame rate; full quality returns once the camera settles.
+ * furniture is dragged, render at lower pixel ratio so interaction
+ * stays at full frame rate on CPU; full quality returns once the camera settles.
  */
 var fastMode = { active: false, fullDpr: 0, pendingRestore: false, lastInteractT: 0 };
 
@@ -121,7 +146,8 @@ function beginFastMode() {
   if (fastMode.active || !renderer) return;
   fastMode.active = true;
   fastMode.fullDpr = renderer.getPixelRatio();
-  if (fastMode.fullDpr > 1) renderer.setPixelRatio(1);
+  var targetDpr = hardwareProfile.isSoftware ? 0.75 : hardwareProfile.isCpuOrLowEnd ? 0.85 : 1.0;
+  if (fastMode.fullDpr > targetDpr) renderer.setPixelRatio(targetDpr);
   invalidate();
 }
 
@@ -136,10 +162,10 @@ function endFastMode() {
 }
 
 /**
- * SSAO device tier: "high" desktop, "mid" high-end phones/tablets, "low" rest.
- * deviceMemory is undefined on Safari/iPad — treat as 4GB and rely on cores.
+ * SSAO device tier: disabled for CPU / integrated / low-end hardware for smooth framerate.
  */
 function aoDeviceTier() {
+  if (hardwareProfile.isCpuOrLowEnd || hardwareProfile.isSoftware) return "low";
   var ua = navigator.userAgent || "";
   var isTouch =
     /Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(ua) ||
@@ -152,16 +178,17 @@ function aoDeviceTier() {
 
 function setupPostprocessing(width, height) {
   var tier = aoDeviceTier();
-  if (/[?&]ao=off/.test(window.location.search)) tier = "low";
-  if (tier === "low") return;
-  var dprCap = tier === "high" ? 1.75 : 1.5;
+  if (/[?&]ao=off/.test(window.location.search) || /[?&]cpu=1/.test(window.location.search)) tier = "low";
+  if (tier === "low") {
+    composer = null;
+    return;
+  }
+  var dprCap = tier === "high" ? 1.5 : 1.15;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap));
   renderer.setSize(width, height);
 
   composer = new EffectComposer(renderer);
   composer.setPixelRatio(renderer.getPixelRatio());
-  // r184 SSAOPass only multiply-blends AO onto the readBuffer — a RenderPass
-  // before it must supply the beauty image, or the output is blank.
   composer.addPass(new RenderPass(scene, camera));
   ssaoPass = new SSAOPass(
     scene,
@@ -192,16 +219,16 @@ function requestShadowUpdate() {
   invalidate();
 }
 
-/** Watchdog: tablets that can't hold ~40fps with SSAO fall back to plain render. */
+/** Watchdog: tablets/CPUs that can't hold ~40fps with SSAO fall back to plain render. */
 function disableAOForPerf() {
   if (!composer) return;
   endFastMode();
   composer.dispose();
   composer = null;
   ssaoPass = null;
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, hardwareProfile.dprCap));
   resize3D();
-  console.info("[plan3d] SSAO disabled — sustained low FPS on this device");
+  console.info("[plan3d] Postprocessing disabled for performance optimization");
 }
 
 function applyOrbitForViewMode(mode) {
@@ -251,12 +278,16 @@ export function init3D(container, data, planImage) {
   renderer = new THREE.WebGLRenderer({
     antialias: true,
     alpha: false,
-    powerPreference: "high-performance",
+    powerPreference: "default",
   });
+  detectHardwareProfile(renderer);
+
   renderer.setSize(width, height);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  // Cap device pixel ratio to avoid CPU-rasterization bottleneck on high-DPI displays
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, hardwareProfile.dprCap));
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  // Use PCFShadowMap or BasicShadowMap on CPU/low-end for faster shadow evaluation
+  renderer.shadowMap.type = hardwareProfile.isCpuOrLowEnd ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
   // Static scene: shadow map renders only when casters change (requestShadowUpdate).
   renderer.shadowMap.autoUpdate = false;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -268,6 +299,7 @@ export function init3D(container, data, planImage) {
   applyEnvironment(renderer, scene, 0.3);
 
   controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableZoom = false; // FIX 1: Completely disable wheel/gesture zoom on 3D
   controls.enableDamping = true;
   controls.dampingFactor = 0.18;
   controls.maxPolarAngle = Math.PI * 0.88;
@@ -279,6 +311,14 @@ export function init3D(container, data, planImage) {
   orbitDefaults.minPolarAngle = controls.minPolarAngle;
   orbitDefaults.maxPolarAngle = controls.maxPolarAngle;
   applyOrbitForViewMode(viewMode);
+
+  renderer.domElement.addEventListener(
+    "wheel",
+    function (e) {
+      e.preventDefault();
+    },
+    { passive: false }
+  );
 
   // On-demand rendering: any orbit change or canvas pointer activity
   // (hover raycasts, drag, paint, elevation handles) flags a frame.
@@ -299,7 +339,7 @@ export function init3D(container, data, planImage) {
   controls.addEventListener("end", function () {
     fastMode.pendingRestore = true;
   });
-  ["pointermove", "pointerdown", "pointerup", "wheel"].forEach(function (ev) {
+  ["pointermove", "pointerdown", "pointerup"].forEach(function (ev) {
     renderer.domElement.addEventListener(ev, invalidate, { passive: true });
   });
 
@@ -359,7 +399,9 @@ export function init3D(container, data, planImage) {
   }
   requestShadowUpdate();
 
-  setupPostprocessing(width, height);
+  // Direct rendering is more reliable across retail demo machines. The
+  // optional post-processing passes can produce a black canvas on some GPUs.
+  composer = null;
 
   interaction = createPlan3DInteraction({
     renderer: renderer,
@@ -602,6 +644,36 @@ export function select3DFurnitureByItemId(itemId) {
   invalidate();
 }
 
+export function set3DFurnitureVisible(visible) {
+  furnitureVisible = visible !== false;
+  furnitureGroups.forEach(function (group) {
+    group.visible = furnitureVisible;
+  });
+  invalidate();
+}
+
+export function zoom3D(delta) {
+  if (!camera || !controls) return;
+  var target = controls.target || new THREE.Vector3(0, 0.8, 0);
+  var offset = new THREE.Vector3().subVectors(camera.position, target);
+  var factor = delta > 0 ? 0.82 : 1.22;
+  var newLen = offset.length() * factor;
+  if (newLen >= 1.0 && newLen <= 120) {
+    offset.multiplyScalar(factor);
+    camera.position.addVectors(target, offset);
+    controls.update();
+    invalidate();
+  }
+}
+
+export function fit3D() {
+  if (sceneBounds && camera && controls) {
+    frameCamera(camera, controls, sceneBounds, viewMode);
+    controls.update();
+    invalidate();
+  }
+}
+
 /** Update rotation on the selected 3D group without full mesh rebuild. */
 export function applySelectedFurnitureRotation(rotationDeg) {
   if (!interaction) return;
@@ -635,6 +707,9 @@ export function rebuildFurnitureMeshes() {
     if (item.x == null || item.y == null) return;
     var g = addFurnitureGroup(item, wReal, hReal);
     if (g && g.userData.isSofaFurniture) hasSofaOnPlan = true;
+  });
+  furnitureGroups.forEach(function (group) {
+    group.visible = furnitureVisible;
   });
   if (!hasSofaOnPlan) addDefaultLivingRoomSofa(wReal, hReal);
   requestShadowUpdate();
@@ -1862,6 +1937,7 @@ function addFurnitureMeshes(group, typeStr, item, wM, dM, hM) {
     }
   }
 
+  // Keep the item visible while its optional GLB model loads or fails.
   if (typeStr.indexOf("sofa") >= 0 || typeStr.indexOf("lounge") >= 0) {
     var sofaColor = 0xe7dfd0;
     if (item.sofaColorOverride) sofaColor = getSofaHexColor(item.sofaColorOverride);

@@ -63,6 +63,60 @@ body {
 }
 button, input, select { font-family: "Neue Machina", "Trebuchet MS", sans-serif; }
 
+.upload-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(23, 35, 31, .72);
+  backdrop-filter: blur(12px);
+}
+.upload-overlay[hidden] { display: none; }
+.upload-overlay__card {
+  width: min(600px, 94vw);
+  aspect-ratio: 1 / .88;
+  min-height: 500px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  padding: 50px;
+  border: 1px solid rgba(255, 253, 248, .55);
+  border-radius: 18px;
+  background: var(--brand-panel);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, .28);
+  text-align: center;
+}
+.upload-overlay__title { margin: 0; font: 50px/1 "Forum", Georgia, serif; color: var(--brand-ink); }
+.upload-overlay__sub { margin: 0; color: var(--brand-muted); font-size: 18px; }
+.upload-overlay__drop {
+  width: 100%;
+  min-height: 230px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1.5px dashed var(--brand-accent);
+  border-radius: 12px;
+  background: rgba(187, 91, 57, .045);
+  cursor: pointer;
+  transition: background .2s, transform .2s;
+}
+.upload-overlay__drop:hover, .upload-overlay__drop--active { background: rgba(187, 91, 57, .12); transform: translateY(-2px); }
+.upload-overlay__icon { font-size: 38px; }
+.upload-overlay__label { color: var(--brand-ink); font: 18px "Neue Machina", sans-serif; }
+.upload-overlay__hint { color: var(--brand-muted); font-size: 14px; }
+.upload-overlay__or { width: 100%; display: flex; align-items: center; gap: 12px; color: var(--brand-muted); font-size: 12px; }
+.upload-overlay__or::before, .upload-overlay__or::after { content: ""; flex: 1; height: 1px; background: var(--brand-line); }
+.upload-overlay__demo-btn { min-width: 180px; padding: 15px 26px; border-radius: var(--brand-pill); background: var(--brand-ink); color: var(--brand-panel); font-size: 16px; }
+.upload-overlay__demo-btn:hover { background: var(--brand-accent); color: #fffdf8; }
+.upload-overlay__status { min-height: 1.2em; margin: 0; color: var(--brand-accent-strong); font-size: 13px; }
+
 #app { min-height: 100vh; display: flex; flex-direction: column; }
 #toolbar {
   min-height: 72px;
@@ -90,6 +144,15 @@ button, input, select { font-family: "Neue Machina", "Trebuchet MS", sans-serif;
   background: transparent;
 }
 .theme-toggle:hover { color: var(--brand-panel); background: var(--brand-ink); }
+.phase-nav { position: sticky; top: 0; z-index: 40; display: flex; justify-content: center; align-items: center; width: 100%; min-height: 70px; padding: 10px 24px; border-bottom: 1px solid var(--brand-line); background: var(--brand-panel); box-shadow: 0 4px 14px rgba(30, 32, 28, .06); }
+.phase-nav__btn { position: relative; display: inline-flex; align-items: center; gap: 9px; min-height: 42px; padding: 8px 28px 8px 10px; border: 0; border-radius: 0; background: transparent; color: #77736e; font: 700 15px/1 "Neue Machina", sans-serif; white-space: nowrap; }
+.phase-nav__btn:not(:last-child)::after { content: ""; position: absolute; right: 5px; top: 50%; width: 22px; height: 2px; background: var(--brand-line); }
+.phase-nav__btn::before { content: attr(data-step); display: inline-grid; place-items: center; width: 27px; height: 27px; border-radius: 50%; background: #aaa7a3; color: #fff; font: 700 14px/1 "Neue Machina", sans-serif; }
+.phase-nav__btn--active { color: var(--brand-ink); }
+.phase-nav__btn--active::before { background: #171615; }
+.phase-nav__btn:hover { background: transparent; color: var(--brand-ink); }
+.contextual-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 18px; min-height: 48px; background: var(--brand-panel); border-bottom: 1px solid var(--brand-line); }
+.contextual-toolbar .toolbar-row { width: auto; }
 
 .bar.bar--stacked { flex-direction: row; align-items: center; gap: 10px; }
 .toolbar-row { width: auto; gap: 8px; }
@@ -120,6 +183,14 @@ button.tool-active, .sku-filter-btn--active { background: var(--brand-accent); b
   gap: 14px;
   background: radial-gradient(circle at 100% 0%, rgba(187, 91, 57, .08), transparent 28%), var(--brand-paper);
 }
+.plan-rail { grid-column: 1; grid-row: 1; display: flex; flex-direction: column; gap: 8px; padding: 18px 14px; border: 1px solid var(--brand-line); border-radius: var(--brand-radius); background: var(--brand-panel); box-shadow: var(--brand-shadow); }
+.plan-rail[hidden] { display: none; }
+.plan-rail__title { margin-bottom: 4px; color: var(--brand-muted); font: 11px/1 "Neue Machina", sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+.plan-rail button { width: 100%; text-align: left; border-radius: 8px; background: transparent; }
+.plan-rail button:hover { background: var(--brand-accent); color: #fffdf8; }
+.plan-rail__edit { margin-top: 18px; border-top: 1px solid var(--brand-line); padding-top: 14px; }
+.plan-rail__edit summary { cursor: pointer; color: var(--brand-muted); margin-bottom: 8px; }
+.plan-rail__edit button { margin-top: 5px; }
 #catalog-drawer {
   position: relative;
   inset: auto;
@@ -138,10 +209,9 @@ button.tool-active, .sku-filter-btn--active { background: var(--brand-accent); b
 #catalog-drawer[hidden] { display: block; }
 .catalog-drawer__top { padding: 14px; border-bottom: 1px solid var(--brand-line); }
 .catalog-controls { padding: 12px; }
-.catalog-search input, .catalog-filters select { border-radius: 8px; background: transparent; }
-.catalog-grid { grid-template-columns: 1fr; gap: 10px; padding: 0 12px 12px; }
-.catalog-card { border: 1px solid var(--brand-line); border-radius: 10px; background: transparent; overflow: hidden; }
-.catalog-card__body { padding: 10px; }
+.catalog-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 0 12px 12px; }
+.catalog-card { display: flex; flex-direction: column; border: 1px solid var(--brand-line); border-radius: 10px; background: #ffffff; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04); position: relative; }
+.catalog-card__body { padding: 8px 10px 10px; display: flex; flex-direction: column; gap: 3px; flex: 1; justify-content: space-between; }
 
 #viewport, #viewport3d {
   grid-column: 2;
@@ -156,20 +226,50 @@ button.tool-active, .sku-filter-btn--active { background: var(--brand-accent); b
 }
 #viewport3d { position: relative; }
 #content, .plan-wrap { width: 100%; height: 100%; }
+#plan-zoom-controls, #view3d-zoom-controls { position: absolute; right: 18px; z-index: 25; display: flex; align-items: center; gap: 4px; padding: 6px; border: 1px solid var(--brand-line); border-radius: 12px; background: rgba(255, 253, 248, .96); box-shadow: 0 6px 18px rgba(30, 32, 28, .16); }
+#plan-zoom-controls { bottom: 18px; }
+#view3d-zoom-controls { top: 18px; }
+#plan-zoom-controls button, #plan-zoom-level, #view3d-zoom-controls button { min-width: 40px; min-height: 40px; display: inline-grid; place-items: center; border: 0; border-radius: 8px; background: transparent; color: var(--brand-ink); font: 700 18px/1 "Neue Machina", sans-serif; cursor: pointer; }
+#plan-zoom-controls button:hover, #view3d-zoom-controls button:hover { background: var(--brand-accent); color: #fffdf8; }
+#plan-zoom-level { min-width: 58px; font-size: 12px; color: var(--brand-muted); cursor: default; }
+#plan-zoom-fit, #view3d-zoom-fit { font-size: 12px !important; }
 
 .upload-overlay { background: rgba(23, 35, 31, .68); backdrop-filter: blur(8px); }
 .upload-overlay__card { border: 1px solid var(--brand-line); border-radius: var(--brand-radius); background: var(--brand-panel); box-shadow: var(--brand-shadow); }
 .upload-overlay__title { font-family: "Forum", Georgia, serif; font-size: 2rem; color: var(--brand-ink); }
 .upload-overlay__demo-btn, .upload-overlay__cad-btn { border-radius: var(--brand-pill); }
+.upload-overlay__status { min-height: 1.2em; margin: 0; color: var(--brand-accent-strong); font-size: 13px; }
+.upload-overlay__drop--active { border-color: var(--brand-accent); background: rgba(187, 91, 57, .08); }
+.phase-status { min-height: 28px; padding: 6px 18px 10px; color: var(--brand-muted); font: 11px/1.2 "Neue Machina", sans-serif; letter-spacing: .03em; }
+body[data-phase="3d"] #stage { grid-template-columns: minmax(300px, 34%) minmax(0, 66%); padding: 0; }
+body[data-phase="3d"] #catalog-drawer { grid-column: 1; grid-row: 1; display: block; border-radius: 0; border-width: 0 1px 0 0; box-shadow: none; }
+body[data-phase="3d"] #viewport3d { grid-column: 2; border-radius: 0; border: 0; }
+body[data-phase="3d"] .phase-status { display: none; }
+body:not([data-phase="furnish"]):not([data-phase="3d"]) #catalog-drawer { display: none; }
+body[data-phase="plan"] #stage { grid-template-columns: 190px minmax(0, 1fr); }
+body[data-phase="furnish"] #stage { grid-template-columns: minmax(280px, 30%) minmax(0, 70%); }
+body:not([data-phase="plan"]) .toolbar-row--geometry { display: none; }
+body:not([data-phase="furnish"]) .toolbar-row--furniture { display: none; }
+.toolbar-row--file { display: none !important; }
+.llm-status { display: none; }
+.catalog-pricing-note { position: relative; margin: 8px 12px; padding: 12px 34px 12px 14px; border-left: 3px solid #1677c8; background: #f5f9fc; color: #4d5560; font: 13px/1.35 "Neue Machina", sans-serif; }
+.catalog-pricing-note strong, .catalog-pricing-note span { display: block; }
+.catalog-pricing-note strong { margin-bottom: 4px; }
+.catalog-pricing-note button { position: absolute; top: 8px; right: 8px; padding: 0 4px; border: 0; background: transparent; font-size: 18px; color: #4d5560; }
+.catalog-pricing-note button:hover { background: transparent; color: var(--brand-accent); }
 
 @media (max-width: 900px) {
   #toolbar, .bar.bar--stacked { align-items: stretch; }
   .brand-lockup { margin-right: 0; }
   .theme-toggle { margin-left: 0; align-self: flex-start; }
-  #stage { grid-template-columns: 1fr; grid-template-rows: minmax(250px, 40vh) minmax(420px, 1fr); }
-  #catalog-drawer, #viewport, #viewport3d { grid-column: 1; }
+  #stage { grid-template-columns: 1fr; grid-template-rows: auto minmax(420px, 1fr); }
+  #plan-rail, #catalog-drawer, #viewport, #viewport3d { grid-column: 1; }
+  body[data-phase="plan"] #viewport, body[data-phase="furnish"] #viewport { grid-row: 2; }
   #catalog-drawer { grid-row: 1; }
   #viewport, #viewport3d { grid-row: 2; }
+  body[data-phase="3d"] #stage { grid-template-columns: 1fr; grid-template-rows: minmax(260px, 38vh) minmax(420px, 1fr); }
+  body[data-phase="3d"] #catalog-drawer { grid-row: 1; border-width: 0 0 1px; }
+  body[data-phase="3d"] #viewport3d { grid-row: 2; }
 }
 
 body.readonly-share #toolbar { display: none; }

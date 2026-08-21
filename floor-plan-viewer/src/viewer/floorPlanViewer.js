@@ -56,6 +56,7 @@ import {
   rebuildFurnitureMeshes,
   applySelectedFurnitureRotation,
   select3DFurnitureByItemId,
+  set3DFurnitureVisible,
   set3DViewMode,
   set3DFurnitureMovedCallback,
   set3DFurnitureActionCallback,
@@ -69,6 +70,8 @@ import {
   get3DCameraMiniMapState,
   set3DCameraMiniMapPosition,
   snapshot3D,
+  zoom3D,
+  fit3D,
 } from "./plan3dViewer.js";
 import { triggerPhotoreal } from "./plan3dSnapshot.js";
 import { preloadGlbTopDownIcons, setGlbBakeRenderHook } from "./glbTopDownBake.js";
@@ -111,7 +114,16 @@ export function initFloorPlanViewer() {
   var planWrap = document.getElementById("planWrap");
   var tip = document.getElementById("tip");
   var toolbarEl = document.getElementById("toolbar");
+  var contextualToolbarEl = document.getElementById("contextual-toolbar");
   var catalogDrawerEl = document.getElementById("catalog-drawer");
+  var phaseNav = document.getElementById("phase-nav");
+  var uploadStatus = document.getElementById("upload-overlay-status");
+  var planRail = document.getElementById("plan-rail");
+  var planUndo = document.getElementById("plan-undo");
+  var planZoomIn = document.getElementById("plan-zoom-in");
+  var planZoomOut = document.getElementById("plan-zoom-out");
+  var planZoomFit = document.getElementById("plan-zoom-fit");
+  var planZoomLevel = document.getElementById("plan-zoom-level");
 
   var data = {
     analysisVersion: "1.0",
@@ -161,6 +173,7 @@ export function initFloorPlanViewer() {
   var vertexDrag = null;
   var geo = null;
   var activeMode = "2D";
+  var activePhase = "plan";
   var fileTb = null;
   var geoTb = null;
   var furnitureRow = null;
@@ -1039,6 +1052,7 @@ export function initFloorPlanViewer() {
       payload: { count: count, vaastuEnabled: vaastuEnabled },
     });
     setLlmStatus("Auto-staged " + count + " furniture items (rich SVG + GLB sofa demo)");
+    setPhase(activePhase);
   }
 
   function applyAnalysisFromObject(nextData) {
@@ -1098,6 +1112,8 @@ export function initFloorPlanViewer() {
       rfqStatus = "draft";
     }
     billDismissed = false;
+    displayState.furniture = true;
+    syncFurnitureVisibility();
     lastBillSig = null;
     pendingEvents = [];
     selectedFurnitureId = null;
@@ -1120,10 +1136,9 @@ export function initFloorPlanViewer() {
   }
 
   function runVisionWith(imagePromise) {
-    setLlmStatus("LLM: reading image...");
+    if (uploadStatus) uploadStatus.textContent = "Reading your floor plan...";
     imagePromise
       .then(function (img) {
-        setLlmStatus(visionAnalyzingMessage());
         return analyzeFloorPlan(img.imageBase64, img.mimeType);
       })
       .then(function (analysis) {
@@ -1133,7 +1148,9 @@ export function initFloorPlanViewer() {
         });
         var apply = function () {
           applyAnalysisFromObject(analysis);
-          setLlmStatus("LLM: analysis loaded");
+          dismissOverlay();
+          if (uploadStatus) uploadStatus.textContent = "";
+          setPhase("plan");
         };
         if (hasSb && (!shearlingCatalog || !shearlingCatalog.length)) {
           return Promise.all([
@@ -1152,15 +1169,16 @@ export function initFloorPlanViewer() {
             })
             .catch(function (err) {
               apply();
-              throw err;
+              setLlmStatus("Catalog unavailable; using the built-in catalog");
             });
         }
         apply();
       })
       .catch(function (err) {
         var msg = err && err.message ? err.message : String(err);
-        setLlmStatus("LLM: error - " + msg);
-        alert(msg);
+        if (uploadStatus) uploadStatus.textContent = "Could not read it. Draw your plan instead.";
+        applyAnalysisFromObject({ rooms: [], walls: [], doors: [], windows: [], furniture: [] });
+        setPhase("plan");
       });
   }
 
@@ -1275,6 +1293,13 @@ export function initFloorPlanViewer() {
       },
     });
   }
+  var pricingNote = document.getElementById("catalog-pricing-note");
+  if (pricingNote) {
+    var pricingClose = pricingNote.querySelector("button");
+    if (pricingClose) pricingClose.addEventListener("click", function () {
+      pricingNote.hidden = true;
+    });
+  }
 
   var viewport2D = document.getElementById("viewport");
   var viewport3D = document.getElementById("viewport3d");
@@ -1283,6 +1308,7 @@ export function initFloorPlanViewer() {
   var btn3dTop = document.getElementById("btn3d-top");
   var btn3dSide = document.getElementById("btn3d-side");
   var btn3dMove = document.getElementById("btn3d-move");
+  var btn3dFurniture = document.getElementById("btn3d-furniture");
 
   if (btn3dDollhouse) {
     btn3dDollhouse.addEventListener("click", function () {
@@ -1302,6 +1328,28 @@ export function initFloorPlanViewer() {
   if (btn3dMove) {
     btn3dMove.addEventListener("click", function () {
       toggle3DMoveMode();
+    });
+  }
+
+  function syncFurnitureVisibility() {
+    var visible = displayState.furniture !== false;
+    set3DFurnitureVisible(visible);
+    var displayToggle = contextualToolbarEl && contextualToolbarEl.querySelector(".display-toggle");
+    if (displayToggle) {
+      displayToggle.textContent = (visible ? "Hide" : "Show") + " furniture";
+      displayToggle.setAttribute("aria-pressed", visible ? "true" : "false");
+    }
+    if (btn3dFurniture) {
+      btn3dFurniture.textContent = (visible ? "Hide" : "Show") + " furniture";
+      btn3dFurniture.setAttribute("aria-pressed", visible ? "true" : "false");
+    }
+  }
+
+  if (btn3dFurniture) {
+    btn3dFurniture.addEventListener("click", function () {
+      displayState = toggleDisplayState(displayState, "furniture");
+      render();
+      syncFurnitureVisibility();
     });
   }
 
@@ -1500,6 +1548,35 @@ export function initFloorPlanViewer() {
     render();
   }
 
+  function setPhase(phase) {
+    activePhase = phase === "3d" ? "3d" : phase === "furnish" ? "furnish" : "plan";
+    document.body.dataset.phase = activePhase;
+    if (planRail) planRail.hidden = activePhase !== "plan";
+    if (planUndo) planUndo.hidden = activePhase !== "plan";
+    if (phaseNav) {
+      phaseNav.hidden = false;
+      phaseNav.querySelectorAll("[data-phase]").forEach(function (btn) {
+        btn.classList.toggle("phase-nav__btn--active", btn.dataset.phase === activePhase);
+      });
+    }
+    if (activePhase === "3d") {
+      show3D();
+      if (catalogDrawer) catalogDrawer.setOpen(true);
+    }
+    else {
+      show2D();
+      if (catalogDrawer) catalogDrawer.setOpen(activePhase === "furnish" || activePhase === "3d");
+    }
+    var phaseStatus = document.getElementById("phase-status");
+    if (phaseStatus) {
+      phaseStatus.textContent = activePhase === "plan"
+        ? (data.rooms.length + " rooms · " + data.doors.length + " doors · " + data.windows.length + " windows")
+        : activePhase === "furnish"
+          ? (data.furniture.length + " pieces placed")
+          : "Choose a view, style, or photoreal render";
+    }
+  }
+
   function show3D() {
     if (activeMode === "3D") return;
     activeMode = "3D";
@@ -1514,6 +1591,10 @@ export function initFloorPlanViewer() {
     if (fileTb && fileTb.btn2D) fileTb.btn2D.classList.remove("tool-active");
     if (fileTb && fileTb.btn3D) fileTb.btn3D.classList.add("tool-active");
     init3D(viewport3D, data, plan);
+    syncFurnitureVisibility();
+    if (selectedFurnitureId) {
+      setTimeout(function () { select3DFurnitureByItemId(selectedFurnitureId); }, 0);
+    }
   }
 
   function markRfqSent() {
@@ -1581,9 +1662,7 @@ export function initFloorPlanViewer() {
       });
   }
 
-  toolbarEl.classList.add("bar--stacked");
-
-  fileTb = mountFileToolbar(toolbarEl, {
+  fileTb = mountFileToolbar(contextualToolbarEl, {
     loadFixture: function () { var ov = document.getElementById("upload-overlay"); if (ov) ov.hidden = true; return loadFixture(); },
     uploadSupabase: hasSbStorage
       ? function () {
@@ -1654,7 +1733,7 @@ export function initFloorPlanViewer() {
 
   mountShareControls(toolbarEl);
 
-  geoTb = mountGeometryToolbar(toolbarEl, {
+  geoTb = mountGeometryToolbar(contextualToolbarEl, {
     toggleSetScale: function () {
       geo.toggleTool("setScale");
     },
@@ -1753,10 +1832,11 @@ export function initFloorPlanViewer() {
   });
   geo.init();
 
-  mountDisplayToolbar(toolbarEl, {
+  mountDisplayToolbar(contextualToolbarEl, {
     toggle: function (key) {
       displayState = toggleDisplayState(displayState, key);
       render();
+      syncFurnitureVisibility();
       return displayState[key];
     },
   });
@@ -1847,9 +1927,9 @@ export function initFloorPlanViewer() {
   // glows. Small, self-explanatory, and rotates the whole Vaastu frame.
   var northWrap = document.createElement("div");
   northWrap.title = "Set North edge (Vaastu)";
-  // Floats over the empty area on the left of the plan, vertically centred.
+  // Fixed to the canvas corner so it never overlaps room content while panning.
   northWrap.style.cssText =
-    "position:absolute;left:14px;top:50%;transform:translateY(-50%);z-index:20;" +
+    "position:absolute;left:14px;top:14px;z-index:20;" +
     "display:grid;grid-template-columns:repeat(3,30px);" +
     "grid-template-rows:repeat(3,30px);align-items:center;justify-items:center;" +
     "background:rgba(243,244,246,0.95);border:1px solid #cbd5e1;border-radius:12px;" +
@@ -1953,7 +2033,7 @@ export function initFloorPlanViewer() {
   furnitureRow.appendChild(deckBtn);
 
   furnitureRow.appendChild(replaceLab);
-  toolbarEl.appendChild(furnitureRow);
+  contextualToolbarEl.appendChild(furnitureRow);
 
   // Mount the North compass floating on the left of the 2D plan viewport.
   if (viewport) {
@@ -2008,10 +2088,10 @@ export function initFloorPlanViewer() {
   addSofaNearBtn.addEventListener("click", function () {
     addSofaNearSelected();
   });
-  toolbarEl.appendChild(furnitureInfoEl);
-  toolbarEl.appendChild(llmStatus);
-  toolbarEl.appendChild(scaleEl);
-  toolbarEl.appendChild(hint);
+  contextualToolbarEl.appendChild(furnitureInfoEl);
+  contextualToolbarEl.appendChild(llmStatus);
+  contextualToolbarEl.appendChild(scaleEl);
+  contextualToolbarEl.appendChild(hint);
 
   replaceSel.addEventListener("change", function () {
     if (!selectedFurnitureId) return;
@@ -2146,16 +2226,51 @@ export function initFloorPlanViewer() {
     hideTooltip(tip);
   });
 
+  var view3dZoomIn = document.getElementById("view3d-zoom-in");
+  var view3dZoomOut = document.getElementById("view3d-zoom-out");
+  var view3dZoomFit = document.getElementById("view3d-zoom-fit");
+
+  if (view3dZoomIn) {
+    view3dZoomIn.addEventListener("click", function () {
+      zoom3D(1);
+    });
+  }
+  if (view3dZoomOut) {
+    view3dZoomOut.addEventListener("click", function () {
+      zoom3D(-1);
+    });
+  }
+  if (view3dZoomFit) {
+    view3dZoomFit.addEventListener("click", function () {
+      fit3D();
+    });
+  }
+
   viewport.addEventListener(
     "wheel",
     function (e) {
+      // FIX 1: Disable scroll-wheel and gesture zoom completely on 2D floor plan view
       e.preventDefault();
-      s *= e.deltaY < 0 ? 1.08 : 0.93;
-      s = Math.min(6, Math.max(0.3, s));
-      applyTransform();
     },
     { passive: false }
   );
+  if (planZoomIn) planZoomIn.addEventListener("click", function () {
+    s = Math.min(6, s * 1.15);
+    applyTransform();
+    if (planZoomLevel) planZoomLevel.textContent = Math.round(s * 100) + "%";
+  });
+  if (planZoomOut) planZoomOut.addEventListener("click", function () {
+    s = Math.max(0.3, s / 1.15);
+    applyTransform();
+    if (planZoomLevel) planZoomLevel.textContent = Math.round(s * 100) + "%";
+  });
+  if (planZoomFit) planZoomFit.addEventListener("click", function () {
+    s = 1;
+    tx = 0;
+    ty = 0;
+    applyTransform();
+    if (planZoomLevel) planZoomLevel.textContent = "100%";
+  });
 
   viewport.addEventListener("mousedown", function (e) {
     if (e.button !== 0) return;
@@ -2383,21 +2498,21 @@ export function initFloorPlanViewer() {
 
   function bootWithDemo() {
     dismissOverlay();
+    displayState.furniture = true;
+    setPhase("plan");
     boot();
   }
 
   function bootWithDataUrl(dataUrl) {
-    dismissOverlay();
     plan.src = dataUrl;
     plan.onload = function () {
       onPlanLoaded();
       preloadGlbTopDownIcons().catch(function () {});
-      // Vision analysis is manual now — press "Analyze LLM" to run it.
+      runVisionOnPlanImage();
     };
   }
 
   async function bootWithFile(file) {
-    dismissOverlay();
     lastOpenedFile = file;
     const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
     const isDxf = file.name.toLowerCase().endsWith(".dxf");
@@ -2418,10 +2533,29 @@ export function initFloorPlanViewer() {
       }
       return;
     }
-    bootWithDataUrl(URL.createObjectURL(file));
+    plan.src = URL.createObjectURL(file);
+    plan.onload = function () {
+      onPlanLoaded();
+      runVisionOnFile(file);
+    };
   }
 
   if (uploadOverlayDemo) uploadOverlayDemo.addEventListener("click", bootWithDemo);
+  if (phaseNav) {
+    phaseNav.addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-phase]");
+      if (btn) setPhase(btn.dataset.phase);
+    });
+  }
+  if (planRail) {
+    planRail.addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-plan-tool]");
+      if (btn && geo) geo.toggleTool(btn.dataset.planTool);
+    });
+  }
+  if (planUndo) planUndo.addEventListener("click", function () {
+    if (geo) geo.performUndo();
+  });
   if (uploadOverlayInput) {
     uploadOverlayInput.addEventListener("change", function () {
       var f = uploadOverlayInput.files && uploadOverlayInput.files[0];
@@ -2436,6 +2570,26 @@ export function initFloorPlanViewer() {
     });
   }
 
+  var uploadDropZone = document.getElementById("upload-drop-zone");
+  if (uploadDropZone) {
+    ["dragenter", "dragover"].forEach(function (type) {
+      uploadDropZone.addEventListener(type, function (e) {
+        e.preventDefault();
+        uploadDropZone.classList.add("upload-overlay__drop--active");
+      });
+    });
+    ["dragleave", "drop"].forEach(function (type) {
+      uploadDropZone.addEventListener(type, function (e) {
+        e.preventDefault();
+        uploadDropZone.classList.remove("upload-overlay__drop--active");
+      });
+    });
+    uploadDropZone.addEventListener("drop", function (e) {
+      var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (file) bootWithFile(file);
+    });
+  }
+
   if (viewToken) {
     dismissOverlay();
     if (hasSb) {
@@ -2445,13 +2599,16 @@ export function initFloorPlanViewer() {
     }
   } else if (hasSb) {
     loadCatalogsFromSupabase()
-      .then(function () { /* overlay stays visible; user picks file or demo */ })
+      .then(function () {
+        bootWithDemo();
+      })
       .catch(function (err) {
         var msg = err && err.message ? err.message : String(err);
         setLlmStatus("Catalog error: " + msg);
+        bootWithDemo();
       });
   } else {
     syncCatalogDrawerRows();
-    /* overlay stays visible; user picks file or demo */
+    bootWithDemo();
   }
 }

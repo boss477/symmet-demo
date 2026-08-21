@@ -7,7 +7,7 @@ var _discMaterial = null;
 /** Area thresholds in m² */
 var AREA_SMALL = 9;
 var AREA_MEDIUM = 20;
-var MAX_TOTAL_SPOTS = 48;
+var MAX_ACTIVE_SPOTLIGHTS = 6;
 
 /**
  * @param {THREE.Object3D} obj
@@ -116,14 +116,17 @@ export function spotPositionsForRoom(polygon, toWorld, count) {
 }
 
 function addSpot(scene, x, z, ceilingY, span, spotIndex) {
-  var pl = track(
-    new THREE.SpotLight(0xffe9c0, 1.5, Math.max(span * 0.85, 6), Math.PI * 0.28, 0.42, 1.6)
-  );
-  pl.position.set(x, ceilingY, z);
-  pl.target.position.set(x, 0, z);
-  pl.castShadow = false;
-  scene.add(pl);
-  scene.add(track(pl.target));
+  // Only add actual shader Spotlight if under budget to keep fragment processing fast on CPUs
+  if (spotIndex < MAX_ACTIVE_SPOTLIGHTS) {
+    var pl = track(
+      new THREE.SpotLight(0xffe9c0, 1.4, Math.max(span * 0.85, 6), Math.PI * 0.28, 0.42, 1.6)
+    );
+    pl.position.set(x, ceilingY, z);
+    pl.target.position.set(x, 0, z);
+    pl.castShadow = false;
+    scene.add(pl);
+    scene.add(track(pl.target));
+  }
 
   if (!_discMaterial) {
     _discMaterial = new THREE.MeshStandardMaterial({
@@ -134,7 +137,7 @@ function addSpot(scene, x, z, ceilingY, span, spotIndex) {
     });
   }
   var disc = trackMesh(
-    new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.04, 24), _discMaterial)
+    new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.04, 16), _discMaterial)
   );
   disc.position.set(x, ceilingY + 0.125, z);
   scene.add(disc);
@@ -155,13 +158,14 @@ export function addSceneLighting(scene, bounds, rooms, toWorld) {
   var shadowExt = Math.max(span * 0.75, 8);
   var ceilingY = 2.85;
 
-  // Reduced ambient — scene.environment (IBL) now supplies fill light
-  scene.add(track(new THREE.HemisphereLight(0xffeed8, 0x6e645a, 0.36)));
+  // Scene ambient + IBL
+  scene.add(track(new THREE.HemisphereLight(0xffeed8, 0x6e645a, 0.45)));
 
   var sun = track(new THREE.DirectionalLight(0xffe7c2, 0.85));
   sun.position.set(cx - span * 0.4, span * 0.85, cz + span * 0.35);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
+  // 1024x1024 provides crisp shadows at 1/4 the memory and pixel overhead of 2048x2048
+  sun.shadow.mapSize.set(1024, 1024);
   sun.shadow.camera.left = sun.shadow.camera.bottom = -shadowExt;
   sun.shadow.camera.right = sun.shadow.camera.top = shadowExt;
   sun.shadow.camera.near = 0.5;
@@ -170,7 +174,7 @@ export function addSceneLighting(scene, bounds, rooms, toWorld) {
   sun.shadow.normalBias = 0.02;
   scene.add(sun);
 
-  var fill = track(new THREE.DirectionalLight(0xd0e8ff, 0.14));
+  var fill = track(new THREE.DirectionalLight(0xd0e8ff, 0.16));
   fill.position.set(cx - span * 0.15, span * 0.35, cz - span * 0.55);
   scene.add(fill);
 
@@ -186,7 +190,6 @@ export function addSceneLighting(scene, bounds, rooms, toWorld) {
 
   (rooms || []).forEach(function (room) {
     if (!room.polygon || room.polygon.length < 3) return;
-    if (spotIndex >= MAX_TOTAL_SPOTS) return;
 
     var area = polygonAreaM2(room.polygon, toWorld);
     var count = lightCountForArea(area);
@@ -196,7 +199,6 @@ export function addSceneLighting(scene, bounds, rooms, toWorld) {
 
     var positions = spotPositionsForRoom(room.polygon, toWorld, count);
     positions.forEach(function (p) {
-      if (spotIndex >= MAX_TOTAL_SPOTS) return;
       addSpot(scene, p.x, p.z, ceilingY, span, spotIndex);
       spotIndex++;
     });
