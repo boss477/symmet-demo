@@ -374,21 +374,24 @@ button:hover {
   color: #0c4a6e;
 }
 .catalog-body {
-  flex: 1 1 auto;
-  overflow: auto;
-  padding: 0;
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  max-height: 100%;
+  overflow-y: auto !important;
+  overflow-x: hidden;
+  padding: 10px 12px;
 }
 .catalog-pricing-note { display: none !important; }
 .catalog-grid {
   display: grid !important;
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   gap: 10px;
-  padding: 0 12px 12px;
+  padding: 0;
 }
 .catalog-card {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: auto;
   border: 1px solid var(--brand-line, #e2e8f0);
   border-radius: 10px;
   overflow: hidden;
@@ -407,6 +410,7 @@ button:hover {
 .catalog-card__media {
   width: 100%;
   aspect-ratio: 1 / 1;
+  height: 110px;
   background: #f8fafc;
   display: flex;
   align-items: center;

@@ -174,16 +174,18 @@ button:hover, .btn:hover { background: var(--brand-ink); color: var(--brand-pane
 button.tool-active, .sku-filter-btn--active { background: var(--brand-accent); border-color: var(--brand-accent); color: #fffdf8; }
 
 #stage {
-  flex: 1;
-  min-height: calc(100vh - 72px);
-  height: auto;
-  padding: 16px;
+  height: calc(100vh - 56px);
+  max-height: calc(100vh - 56px);
+  min-height: 0;
+  padding: 12px;
   display: grid;
-  grid-template-columns: minmax(240px, 25%) minmax(0, 75%);
-  gap: 14px;
+  grid-template-columns: minmax(280px, 32%) minmax(0, 68%);
+  gap: 12px;
   background: radial-gradient(circle at 100% 0%, rgba(187, 91, 57, .08), transparent 28%), var(--brand-paper);
+  overflow: hidden;
+  box-sizing: border-box;
 }
-.plan-rail { grid-column: 1; grid-row: 1; display: flex; flex-direction: column; gap: 8px; padding: 18px 14px; border: 1px solid var(--brand-line); border-radius: var(--brand-radius); background: var(--brand-panel); box-shadow: var(--brand-shadow); }
+.plan-rail { grid-column: 1; grid-row: 1; display: flex; flex-direction: column; gap: 8px; padding: 18px 14px; border: 1px solid var(--brand-line); border-radius: var(--brand-radius); background: var(--brand-panel); box-shadow: var(--brand-shadow); overflow-y: auto; min-height: 0; }
 .plan-rail[hidden] { display: none; }
 .plan-rail__title { margin-bottom: 4px; color: var(--brand-muted); font: 11px/1 "Neue Machina", sans-serif; letter-spacing: .1em; text-transform: uppercase; }
 .plan-rail button { width: 100%; text-align: left; border-radius: 8px; background: transparent; }
@@ -196,9 +198,13 @@ button.tool-active, .sku-filter-btn--active { background: var(--brand-accent); b
   inset: auto;
   grid-column: 1;
   grid-row: 1;
-  width: auto;
+  width: 100%;
   height: 100%;
+  max-height: 100%;
+  min-height: 0;
   min-width: 0;
+  display: flex !important;
+  flex-direction: column !important;
   border: 1px solid var(--brand-line);
   border-radius: var(--brand-radius);
   background: var(--brand-panel);
@@ -207,12 +213,13 @@ button.tool-active, .sku-filter-btn--active { background: var(--brand-accent); b
   z-index: 10;
 }
 #catalog-drawer[hidden] { display: block; }
-.catalog-drawer__top { padding: 14px; border-bottom: 1px solid var(--brand-line); }
-.catalog-controls { padding: 12px; }
-.catalog-grid { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px; padding: 0 12px 12px; }
-.catalog-card { display: flex; flex-direction: column; height: 100%; border: 1px solid var(--brand-line); border-radius: 10px; background: #ffffff; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04); position: relative; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease; user-select: none; }
+.catalog-drawer__top { flex-shrink: 0; padding: 10px 12px; border-bottom: 1px solid var(--brand-line); display: flex; align-items: center; justify-content: space-between; gap: 10px; background: #ffffff; }
+.catalog-controls { flex-shrink: 0; padding: 10px 12px; border-bottom: 1px solid var(--brand-line); background: #ffffff; }
+.catalog-body { flex: 1 1 0 !important; min-height: 0 !important; max-height: 100%; overflow-y: auto !important; overflow-x: hidden; padding: 10px 12px; }
+.catalog-grid { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px; padding: 0; }
+.catalog-card { display: flex; flex-direction: column; height: auto; border: 1px solid var(--brand-line); border-radius: 10px; background: #ffffff; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04); position: relative; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease; user-select: none; }
 .catalog-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(15,23,42,0.08); border-color: var(--brand-accent); }
-.catalog-card__media { width: 100%; aspect-ratio: 1 / 1; background: #f8fafc; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; flex-shrink: 0; }
+.catalog-card__media { width: 100%; aspect-ratio: 1 / 1; height: 110px; background: #f8fafc; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; flex-shrink: 0; }
 .catalog-card__img { width: 100%; height: 100%; display: block; object-fit: contain; padding: 8px; transition: transform 0.15s ease; }
 .catalog-card:hover .catalog-card__img { transform: scale(1.04); }
 .catalog-card__icon { width: 100%; height: 100%; padding: 12px; display: block; }
@@ -233,11 +240,15 @@ button.tool-active, .sku-filter-btn--active { background: var(--brand-accent); b
   grid-row: 1;
   width: 100%;
   height: 100%;
+  max-height: 100%;
+  min-height: 0;
   min-width: 0;
   border: 1px solid var(--brand-line);
   border-radius: var(--brand-radius);
   background: var(--viewport-bg);
   box-shadow: var(--brand-shadow);
+  position: relative;
+  overflow: hidden;
 }
 #viewport3d { position: relative; }
 #content, .plan-wrap { width: 100%; height: 100%; }
@@ -257,12 +268,12 @@ button.tool-active, .sku-filter-btn--active { background: var(--brand-accent); b
 .upload-overlay__drop--active { border-color: var(--brand-accent); background: rgba(187, 91, 57, .08); }
 .phase-status { min-height: 28px; padding: 6px 18px 10px; color: var(--brand-muted); font: 11px/1.2 "Neue Machina", sans-serif; letter-spacing: .03em; }
 body[data-phase="3d"] #stage { grid-template-columns: minmax(300px, 34%) minmax(0, 66%); padding: 0; }
-body[data-phase="3d"] #catalog-drawer { grid-column: 1; grid-row: 1; display: block; border-radius: 0; border-width: 0 1px 0 0; box-shadow: none; }
+body[data-phase="3d"] #catalog-drawer { grid-column: 1; grid-row: 1; display: flex !important; border-radius: 0; border-width: 0 1px 0 0; box-shadow: none; }
 body[data-phase="3d"] #viewport3d { grid-column: 2; border-radius: 0; border: 0; }
 body[data-phase="3d"] .phase-status { display: none; }
 body:not([data-phase="furnish"]):not([data-phase="3d"]) #catalog-drawer { display: none; }
 body[data-phase="plan"] #stage { grid-template-columns: 190px minmax(0, 1fr); }
-body[data-phase="furnish"] #stage { grid-template-columns: minmax(280px, 30%) minmax(0, 70%); }
+body[data-phase="furnish"] #stage { grid-template-columns: minmax(280px, 32%) minmax(0, 68%); }
 body:not([data-phase="plan"]) .toolbar-row--geometry { display: none; }
 body:not([data-phase="furnish"]) .toolbar-row--furniture { display: none; }
 .toolbar-row--file { display: none !important; }
