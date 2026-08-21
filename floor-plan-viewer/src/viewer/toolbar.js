@@ -73,28 +73,31 @@ export function mountGeometryToolbar(container, handlers) {
 
   var buttons = {};
 
-  function addButton(text, fn, key) {
+  function addButton(text, fn, key, shouldAppend) {
     var b = document.createElement("button");
     b.type = "button";
     b.className = "btn";
     b.textContent = text;
     b.addEventListener("click", fn);
-    row.appendChild(b);
+    if (shouldAppend !== false) {
+      row.appendChild(b);
+    }
     if (key) buttons[key] = b;
     return b;
   }
 
-  buttons.btnSetScale = addButton("Set scale", handlers.toggleSetScale, "btnSetScale");
-  buttons.btnMeasure = addButton("Measure", handlers.toggleMeasure, "btnMeasure");
-  buttons.btnVertexEdit = addButton("Edit vertices", handlers.toggleVertexEdit, "btnVertexEdit");
-  buttons.btnDrawRoom = addButton("Add room", handlers.toggleDrawRoom, "btnDrawRoom");
-  buttons.btnWalls = addButton("Walls", handlers.toggleWalls, "btnWalls");
-  buttons.btnWindows = addButton("Windows", handlers.toggleWindows, "btnWindows");
+  buttons.btnSetScale = addButton("Set scale", handlers.toggleSetScale, "btnSetScale", false);
+  buttons.btnMeasure = addButton("Measure", handlers.toggleMeasure, "btnMeasure", false);
+  buttons.btnVertexEdit = addButton("Edit vertices", handlers.toggleVertexEdit, "btnVertexEdit", false);
+  buttons.btnDrawRoom = addButton("Add room", handlers.toggleDrawRoom, "btnDrawRoom", true);
+  buttons.btnWalls = addButton("Walls", handlers.toggleWalls, "btnWalls", false);
+  buttons.btnWindows = addButton("Windows", handlers.toggleWindows, "btnWindows", true);
   buttons.btnWindows.title = "Click a window to select it, drag to move, Delete window to remove";
   buttons.btnHideOverlay = addButton(
     "Hide overlay",
     handlers.toggleOverlayVisibility,
-    "btnHideOverlay"
+    "btnHideOverlay",
+    true
   );
   buttons.btnHideOverlay.title = "Hide drawn rooms/furniture to see the original floor plan";
 
