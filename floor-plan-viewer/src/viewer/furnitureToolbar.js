@@ -4,6 +4,7 @@ var ACTIONS = [
   { id: "bag", label: "Add to bag", title: "Add selected item to bag" },
   { id: "rotate", label: "Rotate", title: "Rotate 5° ( ] )" },
   { id: "replace", label: "Replace", title: "Replace primary item (header SKU)" },
+  { id: "goeswith", label: "Goes with", title: "Show items that go well with this" },
   { id: "copy", label: "Make copy", title: "Duplicate selection with offset" },
   { id: "remove", label: "Remove", title: "Delete selected items" },
 ];

@@ -145,7 +145,7 @@ export function createCatalogDrawer(opts) {
     q: "",
     room: "",
     category: "",
-    chipCategory: "",
+    chipCategory: "Sofa",
     catalog: [],
     favorites: loadFavorites(),
     galleryLoaded: false,
@@ -397,7 +397,6 @@ export function createCatalogDrawer(opts) {
         e.stopPropagation();
         toggleFavorite(r.product_code);
       });
-      imgWrap.appendChild(fav);
 
       var imgUrl = catalogImageUrl(r);
       if (imgUrl) {
@@ -436,22 +435,23 @@ export function createCatalogDrawer(opts) {
       name.textContent = displayName;
       name.title = displayName;
 
+      var desc = document.createElement("div");
+      desc.className = "catalog-card__desc";
+      desc.textContent = (r.product_code || r.category || displayName).trim();
+
+      var meta = document.createElement("div");
+      meta.className = "catalog-card__meta";
+
       var dims = document.createElement("div");
       dims.className = "catalog-card__dims";
       dims.textContent = formatDims(r) || "Standard";
 
-      var priceEl = document.createElement("div");
-      priceEl.className = "catalog-card__price";
-      if (r.price != null && !isNaN(Number(r.price))) {
-        priceEl.textContent = "₹" + Number(r.price).toLocaleString("en-IN");
-      } else {
-        priceEl.textContent = "Price on request";
-        priceEl.classList.add("catalog-card__price--na");
-      }
+      meta.appendChild(dims);
+      meta.appendChild(fav);
 
       body.appendChild(name);
-      body.appendChild(dims);
-      body.appendChild(priceEl);
+      body.appendChild(desc);
+      body.appendChild(meta);
 
       card.appendChild(imgWrap);
       card.appendChild(body);
